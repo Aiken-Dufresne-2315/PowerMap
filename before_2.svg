@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="476" height="347" viewBox="0 0 476 347" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <style>
+    .station { fill: #2563eb; stroke: #1e40af; stroke-width: 2; }
+    .station-id { font-family: Arial, sans-serif; font-size: 12px; fill: white; text-anchor: middle; dominant-baseline: central; }
+    .edge { stroke: #6b7280; stroke-width: 2; }
+    .background { fill: #f8fafc; }
+  </style>
+</defs>
+<rect class="background" width="476" height="347"/>
+<!-- Edges -->
+<line class="edge" x1="104" y1="66" x2="72" y2="109"/>
+<line class="edge" x1="104" y1="66" x2="120" y2="109"/>
+<line class="edge" x1="104" y1="66" x2="147" y2="136"/>
+<line class="edge" x1="72" y1="109" x2="50" y2="173"/>
+<line class="edge" x1="50" y1="173" x2="72" y2="275"/>
+<line class="edge" x1="72" y1="275" x2="115" y2="227"/>
+<line class="edge" x1="115" y1="227" x2="174" y2="254"/>
+<line class="edge" x1="115" y1="227" x2="281" y2="50"/>
+<line class="edge" x1="174" y1="254" x2="147" y2="136"/>
+<line class="edge" x1="120" y1="109" x2="147" y2="136"/>
+<line class="edge" x1="147" y1="136" x2="238" y2="168"/>
+<line class="edge" x1="147" y1="136" x2="281" y2="50"/>
+<line class="edge" x1="238" y1="168" x2="287" y2="173"/>
+<line class="edge" x1="238" y1="168" x2="367" y2="114"/>
+<line class="edge" x1="367" y1="114" x2="281" y2="50"/>
+<line class="edge" x1="367" y1="114" x2="426" y2="152"/>
+<line class="edge" x1="281" y1="50" x2="351" y2="243"/>
+<line class="edge" x1="351" y1="243" x2="415" y2="297"/>
+<line class="edge" x1="415" y1="297" x2="421" y2="227"/>
+<line class="edge" x1="421" y1="227" x2="426" y2="152"/>
+<!-- Stations -->
+<circle class="station" cx="104" cy="66" r="15"/>
+<text class="station-id" x="104" y="66">57</text>
+<circle class="station" cx="72" cy="109" r="15"/>
+<text class="station-id" x="72" y="109">58</text>
+<circle class="station" cx="50" cy="173" r="15"/>
+<text class="station-id" x="50" y="173">59</text>
+<circle class="station" cx="72" cy="275" r="15"/>
+<text class="station-id" x="72" y="275">60</text>
+<circle class="station" cx="115" cy="227" r="15"/>
+<text class="station-id" x="115" y="227">61</text>
+<circle class="station" cx="174" cy="254" r="15"/>
+<text class="station-id" x="174" y="254">62</text>
+<circle class="station" cx="120" cy="109" r="15"/>
+<text class="station-id" x="120" y="109">63</text>
+<circle class="station" cx="147" cy="136" r="15"/>
+<text class="station-id" x="147" y="136">64</text>
+<circle class="station" cx="238" cy="168" r="15"/>
+<text class="station-id" x="238" y="168">65</text>
+<circle class="station" cx="287" cy="173" r="15"/>
+<text class="station-id" x="287" y="173">66</text>
+<circle class="station" cx="367" cy="114" r="15"/>
+<text class="station-id" x="367" y="114">67</text>
+<circle class="station" cx="281" cy="50" r="15"/>
+<text class="station-id" x="281" y="50">68</text>
+<circle class="station" cx="351" cy="243" r="15"/>
+<text class="station-id" x="351" y="243">69</text>
+<circle class="station" cx="415" cy="297" r="15"/>
+<text class="station-id" x="415" y="297">70</text>
+<circle class="station" cx="421" cy="227" r="15"/>
+<text class="station-id" x="421" y="227">71</text>
+<circle class="station" cx="426" cy="152" r="15"/>
+<text class="station-id" x="426" y="152">72</text>
+<text x="238" y="25" style="font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-anchor: middle; fill: #1f2937;">Metro Map Visualization</text>
+<text x="10" y="337" style="font-family: Arial, sans-serif; font-size: 10px; fill: #6b7280;">Coordinate range: X[563, 939], Y[950, 1197]</text>
+</svg>

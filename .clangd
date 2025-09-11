@@ -1,0 +1,18 @@
+CompileFlags:
+  Add: 
+    - -IC:/gurobi1203/win64/include
+    - -IC:/CodeSpace/MetroMap/PowerMap/include
+    - -IC:/Users/vcc/vcpkg/installed/x64-windows/include
+    - -std=c++17
+    - -DWIN32
+    - -D_WIN32_WINNT=0x0601
+  Remove: 
+    - -W*
+
+Diagnostics:
+  ClangTidy:
+    Remove:
+      - modernize-use-equals-default
+
+Index:
+  Background: Build
