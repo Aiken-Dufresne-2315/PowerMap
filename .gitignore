@@ -66,3 +66,14 @@ Thumbs.db
 test.exe
 gurobi_test.exe
 test_3.exe
+
+# SVG files
+*.svg
+
+# Map files
+*.png
+
+# Test Files
+example_pointer_vs_reference.cpp
+example_reference.cpp
+test.cpp
