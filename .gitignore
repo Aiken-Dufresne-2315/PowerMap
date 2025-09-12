@@ -1,0 +1,68 @@
+# Build directories
+build/
+Release/
+Debug/
+x64/
+
+# Compiled Object files
+*.o
+*.obj
+*.exe
+*.dll
+*.lib
+*.a
+*.so
+
+# Visual Studio Files
+*.vcxproj.user
+*.suo
+*.sdf
+*.opensdf
+*.vcxproj.filters.user
+*.tlog
+*.lastbuildstate
+*.idb
+*.pdb
+*.ilk
+*.log
+*.recipe
+*.FileListAbsolute.txt
+*.CppClean.log
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# IDE files
+.vs/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Log files
+*.log
+
+# Test executables
+test.exe
+gurobi_test.exe
+test_3.exe
