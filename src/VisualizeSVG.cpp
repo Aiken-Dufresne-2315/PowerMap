@@ -90,7 +90,7 @@ namespace Map {
             svgFile << "<circle class=\"station\" cx=\"" << x << "\" cy=\"" << y << "\" r=\"15\"/>\n";
             
             // draw station ID number
-            svgFile << "<text class=\"station-id\" x=\"" << x << "\" y=\"" << y << "\">" << vertex.getId() << "</text>\n";
+            svgFile << "<text class=\"station-id\" x=\"" << x << "\" y=\"" << y << "\">" << vertex.getID() << "</text>\n";
         }
         
         // add title

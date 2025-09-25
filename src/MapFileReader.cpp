@@ -43,12 +43,12 @@ namespace Map {
     //------------------------------------------------------------------------------
     // Helper function to create vertex ID to index mapping
     //------------------------------------------------------------------------------
-    std::map<unsigned int, int> createVertexId2Index(const std::vector<BaseVertexProperty>& vertexList) {
-        std::map<unsigned int, int> vertexId2Index;
+    std::map<unsigned int, int> createVertexID2Index(const std::vector<BaseVertexProperty>& vertexList) {
+        std::map<unsigned int, int> vertexID2Index;
         for (int i = 0; i < vertexList.size(); ++i) {
-            vertexId2Index[vertexList[i].getId()] = i;
+            vertexID2Index[vertexList[i].getID()] = i;
         }
-        return vertexId2Index;
+        return vertexID2Index;
     }
 
     //------------------------------------------------------------------------------
@@ -113,10 +113,7 @@ namespace Map {
             const double ANGLE_THRESHOLD_DEG = 30;
             const double TAN_THRESHOLD = std::tan(ANGLE_THRESHOLD_DEG * M_PI / 180.0);
             
-            // b_e^H = 1 if |y_i^0 - y_j^0| ≤ t|x_i^0 - x_j^0| (close to horizontal)
             bool close2H = (dy <= TAN_THRESHOLD * dx);
-            
-            // b_e^V = 1 if |x_i^0 - x_j^0| ≤ t|y_i^0 - y_j^0| (close to vertical)
             bool close2V = (dx <= TAN_THRESHOLD * dy);
             
             // Create edge with auto-generated ID
@@ -185,10 +182,10 @@ namespace Map {
                 BaseVertexProperty vertex;
                 if (parseVertex(line, vertex)) {
                     // !!! ID mapping
-                    vertexIndexMap[vertex.getId()] = vertices.size();
+                    vertexIndexMap[vertex.getID()] = vertices.size();
                     // !!! add the vertex to the vertices vector
                     vertices.push_back(vertex);
-                    std::cout << "read the vertex: " << vertex.getId() << ". " 
+                    std::cout << "read the vertex: " << vertex.getID() << ". " 
                             << vertex.getName() << " (" 
                             << vertex.getCoord().x() << ", " 
                             << vertex.getCoord().y() << ")" << std::endl;
@@ -202,7 +199,7 @@ namespace Map {
                 BaseEdgeProperty edge;
                 if (parseEdge(line, vertices, vertexIndexMap, edge)) {
                     edges.push_back(edge);
-                    std::cout << "read the edge: " << edge.Source().getId() << " - " << edge.Target().getId()
+                    std::cout << "read the edge: " << edge.Source().getID() << " - " << edge.Target().getID()
                             << " (ID: " << edge.ID() << ", angle: " << edge.Angle() << ")" << std::endl;
                 } 
                 else {
@@ -228,13 +225,13 @@ namespace Map {
         // create the vertex ID set
         std::set<unsigned int> vertexIds;
         for (const auto& vertex : vertices) {
-            vertexIds.insert(vertex.getId());
+            vertexIds.insert(vertex.getID());
         }
         
         bool allValid = true;
         for (const auto& edge : edges) {
-            unsigned int sourceId = edge.Source().getId();
-            unsigned int targetId = edge.Target().getId();
+            unsigned int sourceId = edge.Source().getID();
+            unsigned int targetId = edge.Target().getID();
             
             if (vertexIds.find(sourceId) == vertexIds.end()) {
                 std::cerr << "error: the source vertex " << sourceId << " of edge " << edge.ID() 
@@ -296,14 +293,14 @@ namespace Map {
         std::cout << "\nbuilding graph: adding vertices..." << std::endl;
         for (const auto& vertexProp : vertices) {
             BaseUGraphProperty::vertex_descriptor vd = add_vertex(vertexProp, graph);
-            vertexMap[vertexProp.getId()] = vd;
+            vertexMap[vertexProp.getID()] = vd;
         }
         
         // Add all edges to the graph
         std::cout << "\nbuilding graph: adding edges..." << std::endl;
         for (const auto& edgeProp : edges) {
-            unsigned int sourceId = edgeProp.Source().getId();
-            unsigned int targetId = edgeProp.Target().getId();
+            unsigned int sourceId = edgeProp.Source().getID();
+            unsigned int targetId = edgeProp.Target().getID();
             
             // Find vertex descriptors
             auto sourceIt = vertexMap.find(sourceId);

@@ -248,7 +248,7 @@ int optimizeRelativeCoord() {
                 double orig_x = vertexList[i].getCoord().x();
                 double orig_y = vertexList[i].getCoord().y();
                 
-                std::cout << "Station " << vertexList[i].getId() << " (" << vertexList[i].getName() << "): "
+                std::cout << "Station " << vertexList[i].getID() << " (" << vertexList[i].getName() << "): "
                          << "(" << orig_x << ", " << orig_y << ") -> "
                          << "(" << new_x << ", " << new_y << ")" << std::endl;
             }

@@ -5,6 +5,7 @@
 #include "BaseEdgeProperty.h"
 #include "BaseUGraphProperty.h"
 #include "VertexAlignment.h"
+#include "DynamicGrid.h"
 
 int main() {
     std::cout << "=== Edge Orientation Optimization Test ===" << std::endl;
@@ -30,5 +31,9 @@ int main() {
         std::cout << "\n=== Test failed with error code: " << result_3 << " ===" << std::endl;
     }
     
-    return 0;
+    // Map::DynamicGrid tempGrid(2.315, 2);
+    // tempGrid.buildAuxLinesFromGraph(graph);
+    // tempGrid.printAuxLineInfo();
+
+    return 0; 
 }

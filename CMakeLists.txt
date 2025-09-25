@@ -42,7 +42,7 @@ include_directories(${GUROBI_INCLUDE_DIR})
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(include)
 
-# Collect source files manually (excluding main.cpp, RelativeCoord.cpp, PowerMap.cpp)
+# Collect source files manually (excluding main.cpp, RelativeCoord.cpp)
 set(SOURCES
     src/Test.cpp
     src/EdgeOrientation.cpp
@@ -54,6 +54,8 @@ set(SOURCES
     src/Coord2.cpp
     src/VisualizeSVG.cpp
     src/VertexAlignment.cpp
+    src/DynamicGrid.cpp
+    src/PowerMap.cpp
 )
 
 # Create executable file for edge orientation test

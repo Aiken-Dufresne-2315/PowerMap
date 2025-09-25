@@ -23,7 +23,7 @@ namespace Map {
 
         // print vertex information
         BGL_FORALL_VERTICES( vd, graph, BaseUGraphProperty ) {
-            std::cerr << " id = " << graph[vd].getId() << " coord = " << graph[vd].getCoord();
+            std::cerr << " id = " << graph[vd].getID() << " coord = " << graph[vd].getCoord();
         }
     }
 

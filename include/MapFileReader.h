@@ -20,7 +20,7 @@ namespace Map {
     std::string trim(const std::string& str);
 
     // Helper function to create vertex ID to index mapping
-    std::map<unsigned int, int> createVertexId2Index(const std::vector<BaseVertexProperty>& vertexList);
+    std::map<unsigned int, int> createVertexID2Index(const std::vector<BaseVertexProperty>& vertexList);
 
     bool parseVertex(const std::string& line, BaseVertexProperty& vertex);
 

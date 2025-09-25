@@ -77,7 +77,7 @@ namespace Map {
         // Reference to elements
         //------------------------------------------------------------------------------
         // Getters
-        unsigned int        getId()                 const { return id; }
+        unsigned int        getID()                 const { return id; }
         const Coord2&       getCoord()              const { return coord; }
         bool                isValid()               const { return valid; }
         double              getWeight()             const { return weight; }

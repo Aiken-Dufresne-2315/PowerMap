@@ -35,7 +35,7 @@ namespace Map {
     const bool              USE_DEGREE_BASED_WEIGHT = false;            // Enable degree-based weighting (future extension)
 
     // Helper function to calculate vertex weight (reserved for future extensions)
-    double calculateVertexWeight(const BaseVertexProperty& vertex, const BaseUGraphProperty& graph) {
+    double calculateVWeight(const BaseVertexProperty& vertex, const BaseUGraphProperty& graph) {
         if (!USE_DEGREE_BASED_WEIGHT) {
             return DEFAULT_VERTEX_WEIGHT;
         }
@@ -182,7 +182,7 @@ namespace Map {
             }
             
             // Create vertex ID to index mapping
-            std::map<unsigned int, int> vertexId2Index = createVertexId2Index(vertexList);
+            std::map<unsigned int, int> vertexId2Index = createVertexID2Index(vertexList);
         
             // Calculate coordinate boundaries
             double x_min = vertexList[0].getCoord().x();
@@ -347,7 +347,7 @@ namespace Map {
             
             GRBQuadExpr objective = 0;
             for (int i = 0; i < vertexNum; ++i) {
-                double weight = calculateVertexWeight(vertexList[i], graph);
+                double weight = calculateVWeight(vertexList[i], graph);
                 objective += weight * ((X[i] - vertexList[i].getCoord().x()) * (X[i] - vertexList[i].getCoord().x()) + 
                             (Y[i] - vertexList[i].getCoord().y()) * (Y[i] - vertexList[i].getCoord().y()));
             }
@@ -376,14 +376,14 @@ namespace Map {
                     for (int h = 0; h < hLines.size(); ++h) {
                         if (vertex2HLine[i][h].get(GRB_DoubleAttr_X) > 0.5) {
                             wasAligned = true;
-                            std::cout << "Vertex " << vertexList[i].getId() << " aligned to H-line y=" << hLines[h];
+                            std::cout << "Vertex " << vertexList[i].getID() << " aligned to H-line y=" << hLines[h];
                             break;
                         }
                     }
                     for (int v = 0; v < vLines.size(); ++v) {
                         if (vertex2VLine[i][v].get(GRB_DoubleAttr_X) > 0.5) {
                             if (wasAligned) std::cout << " and ";
-                            else std::cout << "Vertex " << vertexList[i].getId() << " aligned to ";
+                            else std::cout << "Vertex " << vertexList[i].getID() << " aligned to ";
                             std::cout << "V-line x=" << vLines[v];
                             wasAligned = true;
                             break;
@@ -404,7 +404,7 @@ namespace Map {
                 std::pair<BaseUGraphProperty::vertex_iterator, BaseUGraphProperty::vertex_iterator> vp = vertices(graph);
                 for (BaseUGraphProperty::vertex_iterator vi = vp.first; vi != vp.second; ++vi) {
                     BaseVertexProperty& vertex = graph[*vi];
-                    auto it = vertexId2Index.find(vertex.getId());
+                    auto it = vertexId2Index.find(vertex.getID());
                     if (it != vertexId2Index.end()) {
                         int idx = it->second;
                         double newX = X[idx].get(GRB_DoubleAttr_X);
@@ -412,7 +412,7 @@ namespace Map {
                         vertex.setCoord(newX, newY);
 
                         std::cout << "El Psy Kongroo!" << std::endl;
-                        std::cout << "Vertex " << vertex.getId() << " (" << newX << ", " << newY << ")" << std::endl;
+                        std::cout << "Vertex " << vertex.getID() << " (" << newX << ", " << newY << ")" << std::endl;
                     }
                 }
 

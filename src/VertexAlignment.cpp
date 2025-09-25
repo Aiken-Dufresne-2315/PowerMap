@@ -35,7 +35,7 @@ namespace Map {
     const bool              USE_DEGREE_BASED_WEIGHT = false;            // Enable degree-based weighting (future extension)
 
     // Helper function to calculate vertex weight (reserved for future extensions)
-    double calculateVertexWeight(const BaseVertexProperty& vertex, const BaseUGraphProperty& graph) {
+    double calculateVWeight(const BaseVertexProperty& vertex, const BaseUGraphProperty& graph) {
         if (!USE_DEGREE_BASED_WEIGHT) {
             return DEFAULT_VERTEX_WEIGHT;
         }
@@ -154,7 +154,7 @@ namespace Map {
     };
 
     // Pre-select vertices for alignment based on closest line within tolerance
-    std::vector<VertexLineCandidate> preSelectVerticesForAlignment(
+    std::vector<VertexLineCandidate> preSelect(
         const std::vector<BaseVertexProperty>& vertexList,
         const std::vector<double>& hLines,
         const std::vector<double>& vLines) {
@@ -211,7 +211,7 @@ namespace Map {
             }
             
             // Create vertex ID to index mapping
-            std::map<unsigned int, int> vertexId2Index = createVertexId2Index(vertexList);
+            std::map<unsigned int, int> vertexID2Index = createVertexID2Index(vertexList);
         
             // Calculate coordinate boundaries
             double x_min = vertexList[0].getCoord().x();
@@ -240,7 +240,6 @@ namespace Map {
             std::vector<double> hLines = clusterCoordinates1D(yCoords, optimalHorizontalK);
             std::vector<double> vLines = clusterCoordinates1D(xCoords, optimalVerticalK);
             
-
             std::cout << "Detected " << hLines.size() << " horizontal alignment lines" << std::endl;
             for (int i = 0; i < hLines.size(); ++i) {
                 std::cout << "  H-Line " << i << ": y = " << hLines[i] << std::endl;
@@ -260,7 +259,7 @@ namespace Map {
             // Phase 2: Pre-select vertices for alignment
             std::cout << "\n=== Phase 2: Pre-selection ===" << std::endl;
             
-            std::vector<VertexLineCandidate> alignmentCandidates = preSelectVerticesForAlignment(vertexList, hLines, vLines);
+            std::vector<VertexLineCandidate> alignmentCandidates = preSelect(vertexList, hLines, vLines);
             
             std::cout << "Selected " << alignmentCandidates.size() << " alignment constraints:" << std::endl;
             
@@ -274,7 +273,7 @@ namespace Map {
                 int vertexIdx = pair.first;
                 const auto& candidates = pair.second;
                 
-                std::cout << "  Vertex " << vertexList[vertexIdx].getId() << " -> ";
+                std::cout << "  Vertex " << vertexList[vertexIdx].getID() << " -> ";
                 for (int i = 0; i < candidates.size(); ++i) {
                     if (i > 0) std::cout << " and ";
                     const auto& candidate = candidates[i];
@@ -326,7 +325,7 @@ namespace Map {
             
             GRBQuadExpr objective = 0;
             for (int i = 0; i < vertexNum; ++i) {
-                double weight = calculateVertexWeight(vertexList[i], graph);
+                double weight = calculateVWeight(vertexList[i], graph);
                 objective += weight * ((X[i] - vertexList[i].getCoord().x()) * (X[i] - vertexList[i].getCoord().x()) + 
                             (Y[i] - vertexList[i].getCoord().y()) * (Y[i] - vertexList[i].getCoord().y()));
             }
@@ -360,7 +359,7 @@ namespace Map {
                     auto it = vertexToCandidates.find(i);
                     if (it != vertexToCandidates.end()) {
                         const auto& candidates = it->second;
-                        std::cout << "Vertex " << vertexList[i].getId() << " aligned to ";
+                        std::cout << "Vertex " << vertexList[i].getID() << " aligned to ";
                         
                         for (int j = 0; j < candidates.size(); ++j) {
                             if (j > 0) std::cout << " and ";
@@ -381,8 +380,8 @@ namespace Map {
                 std::pair<BaseUGraphProperty::vertex_iterator, BaseUGraphProperty::vertex_iterator> vp = vertices(graph);
                 for (BaseUGraphProperty::vertex_iterator vi = vp.first; vi != vp.second; ++vi) {
                     BaseVertexProperty& vertex = graph[*vi];
-                    auto it = vertexId2Index.find(vertex.getId());
-                    if (it != vertexId2Index.end()) {
+                    auto it = vertexID2Index.find(vertex.getID());
+                    if (it != vertexID2Index.end()) {
                         int idx = it->second;
                         double newX = X[idx].get(GRB_DoubleAttr_X);
                         double newY = Y[idx].get(GRB_DoubleAttr_X);
