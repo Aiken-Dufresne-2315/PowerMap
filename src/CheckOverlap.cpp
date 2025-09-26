@@ -1,5 +1,7 @@
 #include "CheckOverlap.h"
 #include "BaseEdgeProperty.h"
+#include "BaseVertexProperty.h"
+#include "BaseUGraphProperty.h"
 #include <cmath>
 
 namespace Map {
@@ -67,6 +69,37 @@ namespace Map {
         }
         else{
             return false;
+        }
+    }
+
+    // check 
+    bool globalVVOverlap(const BaseVertexProperty& v, const BaseUGraphProperty& graph) {
+        std::pair<BaseUGraphProperty::vertex_iterator, BaseUGraphProperty::vertex_iterator> vp = boost::vertices(graph);
+        for (BaseUGraphProperty::vertex_iterator vit = vp.first; vit != vp.second; ++vit) {
+            BaseVertexProperty tempV = graph[*vit];
+            if (v.getID() == tempV.getID()) {
+                continue;
+            }
+            else {
+                if (VVOverlap(v, tempV)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool globalVEOverlap(const BaseVertexProperty& v, const BaseUGraphProperty& graph) {
+        std::pair<BaseUGraphProperty::edge_iterator, BaseUGraphProperty::edge_iterator> out_ep = boost::out_edges(, graph);
+        std::pair<BaseUGraphProperty::edge_iterator, BaseUGraphProperty::edge_iterator> ep = boost::edges(graph);
+        for (BaseUGraphProperty::edge_iterator eit = ep.first; eit != ep.second; ++eit) {
+            BaseEdgeProperty tempE = graph[*eit];
+            if (e.ID() == tempE.ID()) {
+                continue;
+            }
+            else {
+                if( )
+            }
         }
     }
 }

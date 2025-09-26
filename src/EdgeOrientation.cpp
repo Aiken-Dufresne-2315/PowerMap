@@ -148,7 +148,7 @@ namespace Map {
                 std::cout << "\nProcessing vertex " << currentVertexIndex << " (ID: " << graph[current_vertex].getID() << ")" << std::endl;
                 
                 std::pair<BaseUGraphProperty::out_edge_iterator, BaseUGraphProperty::out_edge_iterator>
-                    out_range = boost::out_edges(current_vertex, graph);
+                out_range = boost::out_edges(current_vertex, graph);
                 
                 // !!! for each out-edge of the current vertex
                 for (BaseUGraphProperty::out_edge_iterator ei = out_range.first; ei != out_range.second; ++ei) {

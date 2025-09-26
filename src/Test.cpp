@@ -15,21 +15,21 @@ int main() {
     Map::BaseUGraphProperty graph;
     Map::readMapFileToGraph("local_map.txt", vertexList, edgeList, graph);
     
-    int result_2 = Map::optimizeEdgeOrientation(vertexList, edgeList, graph);
+    // int result_2 = Map::optimizeEdgeOrientation(vertexList, edgeList, graph);
     
-    if (result_2 == 0) {
-        std::cout << "\n=== Test completed successfully! ===" << std::endl;
-    } else {
-        std::cout << "\n=== Test failed with error code: " << result_2 << " ===" << std::endl;
-    }
+    // if (result_2 == 0) {
+    //     std::cout << "\n=== Test completed successfully! ===" << std::endl;
+    // } else {
+    //     std::cout << "\n=== Test failed with error code: " << result_2 << " ===" << std::endl;
+    // }
 
-    int result_3 = Map::optimizeVertexAlignment(vertexList, edgeList, graph);
+    // int result_3 = Map::optimizeVertexAlignment(vertexList, edgeList, graph);
 
-    if (result_3 == 0) {
-        std::cout << "\n=== Test completed successfully! ===" << std::endl;
-    } else {
-        std::cout << "\n=== Test failed with error code: " << result_3 << " ===" << std::endl;
-    }
+    // if (result_3 == 0) {
+    //     std::cout << "\n=== Test completed successfully! ===" << std::endl;
+    // } else {
+    //     std::cout << "\n=== Test failed with error code: " << result_3 << " ===" << std::endl;
+    // }
     
     // Map::DynamicGrid tempGrid(2.315, 2);
     // tempGrid.buildAuxLinesFromGraph(graph);

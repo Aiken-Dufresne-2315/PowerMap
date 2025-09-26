@@ -19,8 +19,12 @@
 #include "BaseVertexProperty.h"
 #include "BaseEdgeProperty.h"
 #include "BaseUGraphProperty.h"
+#include "Commons.h"
 
 namespace Map {
+    
+    // Global vertex ID to descriptor mapping
+    std::map<int, boost::graph_traits<BaseUGraphProperty>::vertex_descriptor> vertexID2Descriptor;
     //------------------------------------------------------------------------------
     // calculate the angle between two vertices (in radians)
     //------------------------------------------------------------------------------
@@ -126,9 +130,9 @@ namespace Map {
         return false;
     }
 
-    //------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     // !!! the main function to read the file - filling vertices and edges vectors
-    //------------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
     bool readMapFile(const std::string& filename, 
                     std::vector<BaseVertexProperty>& vertices, 
                     std::vector<BaseEdgeProperty>& edges) {
@@ -333,6 +337,20 @@ namespace Map {
     }
 
     //------------------------------------------------------------------------------
+    // Build global vertex ID to descriptor mapping
+    //------------------------------------------------------------------------------
+    void buildVertexMapping(const BaseUGraphProperty& graph) { 
+        vertexID2Descriptor.clear();
+        std::pair<BaseUGraphProperty::vertex_iterator, BaseUGraphProperty::vertex_iterator> vertices = boost::vertices(graph);
+        for (auto vit = vertices.first; vit != vertices.second; ++vit) {
+            int id = graph[*vit].getID();
+            vertexID2Descriptor[id] = *vit;
+            // std::cout << "\n" << id << " " << graph[*vit].getID() << " " << *vit << std::endl;
+        }
+        std::cout << "built vertex mapping with " << vertexID2Descriptor.size() << " vertices" << std::endl;
+    }
+
+    //------------------------------------------------------------------------------
     // read map file and build BaseUGraphProperty directly
     // Hierarchical structure: readMapFile -> validateEdges -> buildGraph
     //------------------------------------------------------------------------------
@@ -349,7 +367,11 @@ namespace Map {
         }
         
         // Build the graph
-        return buildGraph(vertices, edges, graph);
+        if (buildGraph(vertices, edges, graph)) {
+            // Build the global vertex mapping after successful graph construction
+            buildVertexMapping(graph);
+            return true;
+        }
+        return false;
     }
-
 } // namespace Map

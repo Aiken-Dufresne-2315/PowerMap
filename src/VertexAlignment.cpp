@@ -24,7 +24,7 @@ namespace Map {
 
     // Parameter settings for vertex alignment optimization
     // !!! too many parameters depend on pre-set values !!!
-    const double            ALIGNMENT_TOLERANCE = 30.0;                 // Tolerance for considering vertices "close" to a line
+    const double            ALIGNMENT_TOLERANCE = 20.0;                 // Tolerance for considering vertices "close" to a line
     const int               MAX_HORIZONTAL_LINES = -1;                  // -1 means auto-determine
     const int               MAX_VERTICAL_LINES = -1;                    // -1 means auto-determine  
     const double            CLUSTERING_BANDWIDTH = 15.0;                // Bandwidth for density estimation

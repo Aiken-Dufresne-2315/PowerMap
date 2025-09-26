@@ -49,6 +49,9 @@ namespace Map {
         const std::vector<BaseVertexProperty>& vertices, 
         const std::vector<BaseEdgeProperty>& edges);
 
+    // Build global vertex ID to descriptor mapping
+    void buildVertexMapping(const BaseUGraphProperty& graph);
+
     // Graph building functions
     bool readMapFileToGraph(const std::string& filename, std::vector<BaseVertexProperty>& vertices, std::vector<BaseEdgeProperty>& edges, BaseUGraphProperty& graph);
 } // namespace Map
