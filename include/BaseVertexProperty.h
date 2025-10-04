@@ -30,8 +30,8 @@ namespace Map {
         bool            valid;
         double          weight;
 
-        double          namePixelWidth;
-        double          namePixelHeight;
+        double          nameW;
+        double          nameH;
         std::string     name;
         
         // !!! Direction mask: [Up, Down, Left, Right] - true if outgoing edge exists
@@ -53,17 +53,17 @@ namespace Map {
         BaseVertexProperty( void );
 
         // parameterized constructor
-        BaseVertexProperty( unsigned int _id, double x, double y, const std::string& _name )
-            : id(_id), coord(x, y), valid(true), weight(1.0), 
-              namePixelWidth(0.0), namePixelHeight(0.0), name(_name), 
-              dirMask({false, false, false, false}) {}
+        BaseVertexProperty(unsigned int _id, double x, double y, const std::string& _name): 
+            id(_id), coord(x, y), valid(true), weight(1.0), 
+            nameW(0.0), nameH(0.0), name(_name), 
+            dirMask({false, false, false, false}) {}
 
         // copy constructor
         // !!! copy constructor of Coord2 called here 
         BaseVertexProperty( 
             const BaseVertexProperty& c 
         ): id(c.id), coord(c.coord), valid(c.valid), weight(c.weight), 
-        namePixelWidth(c.namePixelWidth), namePixelHeight(c.namePixelHeight), 
+        nameW(c.nameW), nameH(c.nameH), 
         name(c.name), dirMask(c.dirMask) {}
 
         // destructor
@@ -72,6 +72,19 @@ namespace Map {
         //------------------------------------------------------------------------------
         // Assignment operators
         //------------------------------------------------------------------------------
+        BaseVertexProperty& operator = (const BaseVertexProperty& other) {
+            if(this != &other) {
+                this->id        = other.id;
+                this->coord     = other.coord;
+                this->valid     = other.valid;
+                this->weight    = other.weight;
+                this->nameW     = other.nameW;
+                this->nameH     = other.nameH;
+                this->name      = other.name;
+                this->dirMask   = other.dirMask;
+            }
+            return *this;
+        }
 
         //------------------------------------------------------------------------------
         // Reference to elements
@@ -82,8 +95,8 @@ namespace Map {
         bool                isValid()               const { return valid; }
         double              getWeight()             const { return weight; }
         const std::string&  getName()               const { return name; }
-        double              getNamePixelWidth()     const { return namePixelWidth; }
-        double              getNamePixelHeight()    const { return namePixelHeight; }
+        double              getNamePixelWidth()     const { return nameW; }
+        double              getNamePixelHeight()    const { return nameH; }
         
         // Direction mask getters (Up=0, Down=1, Left=2, Right=3)
         const std::array<bool, 4>& getDirMask() const { return dirMask; }
@@ -99,8 +112,8 @@ namespace Map {
         void setValid(bool _valid)              { valid = _valid; }
         void setWeight(double _weight)          { weight = _weight; }
         void setName(const std::string& _name)  { name = _name; }
-        void setNamePixelWidth(double _width)   { namePixelWidth = _width; }
-        void setNamePixelHeight(double _height) { namePixelHeight = _height; }
+        void setNamePixelWidth(double _width)   { nameW = _width; }
+        void setNamePixelHeight(double _height) { nameH = _height; }
         
         // Direction mask setters (Up=0, Down=1, Left=2, Right=3)
         void setDirMask(const std::array<bool, 4>& _mask) { dirMask = _mask; }

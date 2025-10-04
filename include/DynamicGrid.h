@@ -17,13 +17,37 @@ namespace Map {
 
     // Structure to represent an auxiliary line with voting information
     struct AuxiliaryLine {
+
+    private:
         double              position;       // x-coordinate for vertical line, y-coordinate for horizontal line
         bool                isHorizontal;   // true for horizontal line, false for vertical line        
         int                 voteCount;      // number of vertices that "vote" for this line
-        std::vector<int>    vertexIds;      // IDs of vertices aligned to this line
+        std::vector<int>    vertexIDs;      // IDs of vertices close to this line
 
-        AuxiliaryLine(double pos, bool isH)
-            : position(pos), isHorizontal(isH), voteCount(0) {}
+    public:
+        AuxiliaryLine() {}
+
+        AuxiliaryLine(double pos, bool isH, int vc = 0): 
+            position(pos), isHorizontal(isH), voteCount(vc) {}
+
+        void setPosition(double pos)                { position = pos; }
+        void setVoteCount(int vc)                   { voteCount = vc; }
+        void setVertexIDs(std::vector<int> vids)    { vertexIDs = vids; }
+
+        double              getPosition() const { return position; }
+        bool                getIsHorizontal() const { return isHorizontal; }
+        int                 getVoteCount() const { return voteCount; }
+        std::vector<int>    getVertexIDs() const { return vertexIDs; }
+
+        AuxiliaryLine& operator = (const AuxiliaryLine& line) {
+            if (this != &line){
+                this->position = line.position;
+                this->isHorizontal = line.isHorizontal;
+                this->voteCount = line.voteCount;
+                this->vertexIDs = line.vertexIDs;
+            }
+            return *this;
+        }
     };
 
     // Main class for managing dynamic grid of auxiliary lines
@@ -37,30 +61,34 @@ namespace Map {
         double  minVoteThreshold;   // minimum votes required for a line to be considered "key"
 
         // Helper functions
-        void sortAuxLinesByVotes();
+        void sortAuxLines();
         
     public:
         // Constructor
-        DynamicGrid(double tolerance = 20.0, double minVotes = 2.0);
+        DynamicGrid();
+        DynamicGrid(double tolerance = 2.315, double minVotes = 2.0);
         
         // Core functionality
-        void buildAuxLinesFromGraph(const BaseUGraphProperty& graphProp);
+        void buildAuxLines(const BaseUGraphProperty& graphProp);
         void electKeyAuxLines();
         
         // Getters
         const std::vector<AuxiliaryLine>& getHorizontalAuxLines() const { return horizontalAuxLines; }
         const std::vector<AuxiliaryLine>& getVerticalAuxLines() const { return verticalAuxLines; }
         
-        std::vector<double> getKeyHorizontalPositions() const;
-        std::vector<double> getKeyVerticalPositions() const;
+        std::vector<double> getHALPositions() const;
+        std::vector<double> getVALPositions() const;
         
         // Information queries
-        int getTotalVoteCount() const;
         int getKeyAuxLineCount() const;
 
         // Configuration
-        void setToleranceAlignDist(double tolerance) { tolerance = tolerance; }
-        void setMinVoteThreshold(double threshold) { minVoteThreshold = threshold; }
+        void setTolerance(double tolerance) { this->tolerance = tolerance; }
+        void setMinVote(double threshold) { this->minVoteThreshold = threshold; }
+
+        // Dynamic line addition
+        void addHorizontalAuxLine(double position);
+        void addVerticalAuxLine(double position);
 
         // Debug and visualization
         void printAuxLineInfo() const;

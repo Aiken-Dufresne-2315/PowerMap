@@ -4,171 +4,185 @@
 
 #include "DynamicGrid.h"
 #include <iostream>
-#include <numeric>
 
 namespace Map {
 
-    DynamicGrid::DynamicGrid(double tolerance, double minVotes) 
-        : tolerance(tolerance), minVoteThreshold(minVotes) {
+    DynamicGrid::DynamicGrid() {}
+
+    DynamicGrid::DynamicGrid(double tolerance, double minVotes): 
+        tolerance(tolerance), minVoteThreshold(minVotes) {
     }
 
-    void DynamicGrid::buildAuxLinesFromGraph(const BaseUGraphProperty& graph) {
+    void DynamicGrid::buildAuxLines(const BaseUGraphProperty& graph) {
         clearAllAuxLines();
         
-        // Use dictionaries to count votes for each coordinate
-        std::map<double, int> xVotes;                   // x-coordinate -> vote count
-        std::map<double, int> yVotes;                   // y-coordinate -> vote count
-        std::map<double, std::vector<int>> x2Vertices;  // x-coordinate -> vertex IDs
-        std::map<double, std::vector<int>> y2Vertices;  // y-coordinate -> vertex IDs
+        // Use dictionaries to count votes for each coordinate 
+        // !!! (sorted by coordinate value in ascending order)
+        std::map<double, int> vALVotes;                   // x-coordinate -> vote count (ascending order)
+        std::map<double, int> hALVotes;                   // y-coordinate -> vote count (ascending order)
+        std::map<double, std::vector<int>> vAL2Vertices;  // x-coordinate -> vertex IDs
+        std::map<double, std::vector<int>> hAL2Vertices;  // y-coordinate -> vertex IDs
         
-        // Iterate through vertices to collect coordinates and count votes
-        auto vertexRange = boost::vertices(graph);
-        for (auto vit = vertexRange.first; vit != vertexRange.second; ++vit) {
+        auto vp = boost::vertices(graph);
+        for (auto vit = vp.first; vit != vp.second; ++vit) {
             const BaseVertexProperty& vertex = graph[*vit];
             Coord2 coord = vertex.getCoord();
-            int vertexId = vertex.getID();
+            int vertexID = vertex.getID();
             
             double x = coord.x();
             double y = coord.y();
             
             // Find or create entry for x-coordinate (vertical line candidate)
-            bool foundXMatch = false;
-            for (auto& pair : xVotes) {
+            bool foundVAL = false;
+            for (auto& pair : vALVotes) {
                 if (std::abs(pair.first - x) <= tolerance) {
                     pair.second++;
-                    x2Vertices[pair.first].push_back(vertexId);
-                    foundXMatch = true;
+                    vAL2Vertices[pair.first].push_back(vertexID);
+                    foundVAL = true;
                     break;
                 }
             }
-            if (!foundXMatch) {
-                xVotes[x] = 1;
-                x2Vertices[x].push_back(vertexId);
+            if (!foundVAL) {
+                vALVotes[x] = 1;
+                vAL2Vertices[x].push_back(vertexID);
             }
             
             // Find or create entry for y-coordinate (horizontal line candidate)
-            bool foundYMatch = false;
-            for (auto& pair : yVotes) {
+            bool foundHAL = false;
+            for (auto& pair : hALVotes) {
                 if (std::abs(pair.first - y) <= tolerance) {
                     pair.second++;
-                    y2Vertices[pair.first].push_back(vertexId);
-                    foundYMatch = true;
+                    hAL2Vertices[pair.first].push_back(vertexID);
+                    foundHAL = true;
                     break;
                 }
             }
-            if (!foundYMatch) {
-                yVotes[y] = 1;
-                y2Vertices[y].push_back(vertexId);
+            if (!foundHAL) {
+                hALVotes[y] = 1;
+                hAL2Vertices[y].push_back(vertexID);
             }
         }
         
         // Create horizontal auxiliary lines for coordinates that meet the threshold
-        for (const auto& pair : yVotes) {
+        for (const auto& pair : hALVotes) {
             if (pair.second >= minVoteThreshold) {
                 AuxiliaryLine hLine(pair.first, true);
-                hLine.voteCount = pair.second;
-                hLine.vertexIds = y2Vertices[pair.first];
+                // !!! not elegant at all (not unified)
+                hLine.setVoteCount(pair.second);
+                hLine.setVertexIDs(hAL2Vertices[pair.first]);
                 horizontalAuxLines.push_back(hLine);
             }
         }
         
         // Create vertical auxiliary lines for coordinates that meet the threshold
-        for (const auto& pair : xVotes) {
+        for (const auto& pair : vALVotes) {
             if (pair.second >= minVoteThreshold) {
                 AuxiliaryLine vLine(pair.first, false);
-                vLine.voteCount = pair.second;
-                vLine.vertexIds = x2Vertices[pair.first];
+                // !!! not elegant at all (not unified)
+                vLine.setVoteCount(pair.second);
+                vLine.setVertexIDs(vAL2Vertices[pair.first]);
                 verticalAuxLines.push_back(vLine);
             }
         }
-        
-        // Sort lines by position for consistency
-        std::sort(horizontalAuxLines.begin(), horizontalAuxLines.end(),
-                  [](const AuxiliaryLine& a, const AuxiliaryLine& b) {
-                      return a.position < b.position;
-                  });
-        std::sort(verticalAuxLines.begin(), verticalAuxLines.end(),
-                  [](const AuxiliaryLine& a, const AuxiliaryLine& b) {
-                      return a.position < b.position;
-                  });
     }
 
-    void DynamicGrid::electKeyAuxLines() {
-        // Simple voting algorithm: lines are already filtered by minVoteThreshold
-        // Just sort them by vote count for better organization
-        sortAuxLinesByVotes();
-    }
-
-    void DynamicGrid::sortAuxLinesByVotes() {
-        // Sort horizontal lines by vote count (descending)
-        std::sort(horizontalAuxLines.begin(), horizontalAuxLines.end(),
-                  [](const AuxiliaryLine& a, const AuxiliaryLine& b) {
-                      return a.voteCount > b.voteCount;
-                  });
-        
-        // Sort vertical lines by vote count (descending)
-        std::sort(verticalAuxLines.begin(), verticalAuxLines.end(),
-                  [](const AuxiliaryLine& a, const AuxiliaryLine& b) {
-                      return a.voteCount > b.voteCount;
-                  });
-    }
-
-    std::vector<double> DynamicGrid::getKeyHorizontalPositions() const {
+    std::vector<double> DynamicGrid::getHALPositions() const {
         std::vector<double> positions;
         for (const auto& hLine : horizontalAuxLines) {
-            positions.push_back(hLine.position);
+            positions.push_back(hLine.getPosition());
         }
         return positions;
     }
 
-    std::vector<double> DynamicGrid::getKeyVerticalPositions() const {
+    std::vector<double> DynamicGrid::getVALPositions() const {
         std::vector<double> positions;
         for (const auto& vLine : verticalAuxLines) {
-            positions.push_back(vLine.position);
+            positions.push_back(vLine.getPosition());
         }
         return positions;
     }
 
-    int DynamicGrid::getTotalVoteCount() const {
-        int totalVotes = 0;
-        for (const auto& hLine : horizontalAuxLines) {
-            totalVotes += hLine.voteCount;
-        }
-        for (const auto& vLine : verticalAuxLines) {
-            totalVotes += vLine.voteCount;
-        }
-        return totalVotes;
-    }
-
+    // !!! why static type?
     int DynamicGrid::getKeyAuxLineCount() const {
         return static_cast<int>(horizontalAuxLines.size() + verticalAuxLines.size());
     }
 
+    // no
     void DynamicGrid::printAuxLineInfo() const {
         std::cout << "=== Dynamic Grid Auxiliary Lines Info ===" << std::endl;
         std::cout << "Horizontal Lines (" << horizontalAuxLines.size() << "):" << std::endl;
         for (size_t i = 0; i < horizontalAuxLines.size(); ++i) {
             const auto& hLine = horizontalAuxLines[i];
-            std::cout << "  H" << i << ": y=" << hLine.position 
-                      << ", votes=" << hLine.voteCount 
-                      << ", vertices=" << hLine.vertexIds.size() << std::endl;
+            std::cout << "  H" << i << ": y=" << hLine.getPosition() 
+                      << ", votes=" << hLine.getVoteCount() 
+                      << ", vertices=" << hLine.getVertexIDs().size() << std::endl;
         }
         
         std::cout << "Vertical Lines (" << verticalAuxLines.size() << "):" << std::endl;
         for (size_t i = 0; i < verticalAuxLines.size(); ++i) {
             const auto& vLine = verticalAuxLines[i];
-            std::cout << "  V" << i << ": x=" << vLine.position 
-                      << ", votes=" << vLine.voteCount 
-                      << ", vertices=" << vLine.vertexIds.size() << std::endl;
+            std::cout << "  V" << i << ": x=" << vLine.getPosition() 
+                      << ", votes=" << vLine.getVoteCount() 
+                      << ", vertices=" << vLine.getVertexIDs().size() << std::endl;
         }
         
-        std::cout << "Total votes: " << getTotalVoteCount() << std::endl;
         std::cout << "Total key lines: " << getKeyAuxLineCount() << std::endl;
     }
 
     void DynamicGrid::clearAllAuxLines() {
         horizontalAuxLines.clear();
         verticalAuxLines.clear();
+    }
+
+    void DynamicGrid::addHorizontalAuxLine(double position) {
+        // Check if a horizontal line already exists at this position (within tolerance)
+        for (const auto& hLine : horizontalAuxLines) {
+            if (std::abs(hLine.getPosition() - position) < 1e-9) {
+                std::cout << "Horizontal auxiliary line already exists at y=" << hLine.getPosition() << std::endl;
+                return;
+            }
+        }
+        
+        // Create new horizontal auxiliary line with initial vote count of 1
+        AuxiliaryLine newLine(position, true, 1);
+        horizontalAuxLines.push_back(newLine);
+        
+        // Keep the lines sorted by position
+        std::sort(horizontalAuxLines.begin(), horizontalAuxLines.end(),
+                  [](const AuxiliaryLine& a, const AuxiliaryLine& b) {
+                      return a.getPosition() < b.getPosition();
+                  });
+        
+        std::cout << "Added horizontal auxiliary line at y=" << position << std::endl;
+    }
+
+    void DynamicGrid::addVerticalAuxLine(double position) {
+        // Check if a vertical line already exists at this position (within tolerance)
+        for (const auto& vLine : verticalAuxLines) {
+            if (std::abs(vLine.getPosition() - position) < 1e-9) {
+                std::cout << "Vertical auxiliary line already exists at x=" << vLine.getPosition() << std::endl;
+                return;
+            }
+        }
+        
+        // Create new vertical auxiliary line with initial vote count of 1
+        AuxiliaryLine newLine(position, false, 1);
+        verticalAuxLines.push_back(newLine);
+        
+        // Keep the lines sorted by position
+        std::sort(verticalAuxLines.begin(), verticalAuxLines.end(),
+                  [](const AuxiliaryLine& a, const AuxiliaryLine& b) {
+                      return a.getPosition() < b.getPosition();
+                  });
+        
+        std::cout << "Added vertical auxiliary line at x=" << position << std::endl;
+    }
+
+    // Placeholder implementation for electKeyAuxLines
+    // TODO: Implement the logic to select key auxiliary lines if needed
+    void DynamicGrid::electKeyAuxLines() {
+        // Empty implementation for now
+        // Future: Add logic to filter/select key auxiliary lines based on importance
     }
 
 } // namespace Map

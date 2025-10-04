@@ -147,8 +147,7 @@ namespace Map {
                 
                 std::cout << "\nProcessing vertex " << currentVertexIndex << " (ID: " << graph[current_vertex].getID() << ")" << std::endl;
                 
-                std::pair<BaseUGraphProperty::out_edge_iterator, BaseUGraphProperty::out_edge_iterator>
-                out_range = boost::out_edges(current_vertex, graph);
+                std::pair<BaseUGraphProperty::out_edge_iterator, BaseUGraphProperty::out_edge_iterator> out_range = boost::out_edges(current_vertex, graph);
                 
                 // !!! for each out-edge of the current vertex
                 for (BaseUGraphProperty::out_edge_iterator ei = out_range.first; ei != out_range.second; ++ei) {
@@ -284,9 +283,8 @@ namespace Map {
                     }
                 }
                 std::cout << edgeList[0].Source().getCoord().x() << " " << edgeList[0].Source().getCoord().y() << " " << edgeList[0].Angle() << std::endl;
-                
+
                 // Update (angles and xxx of) graph edges and edgeList
-                // !!! close2XXX not updated
                 std::pair<BaseUGraphProperty::edge_iterator, BaseUGraphProperty::edge_iterator> ep = edges(graph);
                 for (BaseUGraphProperty::edge_iterator ei = ep.first; ei != ep.second; ++ei) {
                     BaseEdgeProperty& edge = graph[*ei];

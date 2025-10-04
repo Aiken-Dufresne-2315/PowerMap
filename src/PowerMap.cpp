@@ -22,7 +22,7 @@ namespace Map {
     }
 
     void PowerMap::buildAuxLinesFromCurrentGraph() {
-        gridAManager.buildAuxLinesFromGraph(graphAProp);
+        gridAManager.buildAuxLines(graphAProp);
     }
 
     void PowerMap::electKeyAuxLines() {
@@ -42,8 +42,8 @@ namespace Map {
     }
 
     void PowerMap::setGridParameters(double tolerance, double minVotes) {
-        gridAManager.setToleranceAlignDist(tolerance);
-        gridAManager.setMinVoteThreshold(minVotes);
+        gridAManager.setTolerance(tolerance);
+        gridAManager.setMinVote(minVotes);
     }
 
     void PowerMap::printGraphInfo() const {

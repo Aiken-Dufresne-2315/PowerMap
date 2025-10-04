@@ -345,7 +345,7 @@ namespace Map {
         for (auto vit = vertices.first; vit != vertices.second; ++vit) {
             int id = graph[*vit].getID();
             vertexID2Descriptor[id] = *vit;
-            // std::cout << "\n" << id << " " << graph[*vit].getID() << " " << *vit << std::endl;
+            // std::cout << "\n" << id << " " << graph[*vit].getID() << std::endl;
         }
         std::cout << "built vertex mapping with " << vertexID2Descriptor.size() << " vertices" << std::endl;
     }

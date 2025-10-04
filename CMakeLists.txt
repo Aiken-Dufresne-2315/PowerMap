@@ -56,6 +56,9 @@ set(SOURCES
     src/VertexAlignment.cpp
     src/DynamicGrid.cpp
     src/PowerMap.cpp
+    src/DVPositioning.cpp
+    src/CheckOverlap.cpp
+    src/Commons.cpp
 )
 
 # Create executable file for edge orientation test

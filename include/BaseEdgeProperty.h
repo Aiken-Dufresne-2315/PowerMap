@@ -20,7 +20,7 @@ namespace Map {
     //------------------------------------------------------------------------------
     // Defining Classes
     //------------------------------------------------------------------------------
-    class BaseEdgeProperty {
+    class  BaseEdgeProperty {
 
     private:
         // static null vertex for default constructor
@@ -92,9 +92,32 @@ namespace Map {
         bool                Close2V()           const { return this->close2V; }
         bool                Oriented2H()        const { return this->oriented2H; }
         bool                Oriented2V()        const { return this->oriented2V; }
+
         //------------------------------------------------------------------------------
         // Assignment operators
         //------------------------------------------------------------------------------
+
+        BaseEdgeProperty& operator=(const BaseEdgeProperty& other) {
+            if (this != &other) {
+                this->source = other.source;
+                this->target = other.target; 
+                this->id = other.id;
+                this->angle = other.angle;
+                this->weight = other.weight;
+                this->visited = other.visited;
+                this->visitedTimes = other.visitedTimes;
+                this->close2H = other.close2H;
+                this->close2V = other.close2V;
+                this->oriented2H = other.oriented2H;
+                this->oriented2V = other.oriented2V;
+            }
+            return *this;
+        }
+
+        //------------------------------------------------------------------------------
+        // Setters
+        //------------------------------------------------------------------------------
+
         void setID(unsigned int _id)                    { this->id = _id; }
         void setAngle(double _angle)                    { this->angle = _angle; }
         void setWeight(double _weight)                  { this->weight = _weight; }

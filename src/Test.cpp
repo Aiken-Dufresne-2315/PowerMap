@@ -6,34 +6,63 @@
 #include "BaseUGraphProperty.h"
 #include "VertexAlignment.h"
 #include "DynamicGrid.h"
+#include "DVPositioning.h"
 
 int main() {
-    std::cout << "=== Edge Orientation Optimization Test ===" << std::endl;
+    std::cout << "=== Metro Map Optimization Test ===" << std::endl;
     
     std::vector<Map::BaseVertexProperty> vertexList;
     std::vector<Map::BaseEdgeProperty> edgeList;
     Map::BaseUGraphProperty graph;
-    Map::readMapFileToGraph("local_map.txt", vertexList, edgeList, graph);
     
-    // int result_2 = Map::optimizeEdgeOrientation(vertexList, edgeList, graph);
+    std::cout << "\n=== Reading map file ===" << std::endl;
+    if (!Map::readMapFileToGraph("local_map.txt", vertexList, edgeList, graph)) {
+        std::cerr << "Failed to read map file!" << std::endl;
+        return -1;
+    }
     
-    // if (result_2 == 0) {
-    //     std::cout << "\n=== Test completed successfully! ===" << std::endl;
-    // } else {
-    //     std::cout << "\n=== Test failed with error code: " << result_2 << " ===" << std::endl;
-    // }
-
-    // int result_3 = Map::optimizeVertexAlignment(vertexList, edgeList, graph);
-
-    // if (result_3 == 0) {
-    //     std::cout << "\n=== Test completed successfully! ===" << std::endl;
-    // } else {
-    //     std::cout << "\n=== Test failed with error code: " << result_3 << " ===" << std::endl;
-    // }
+    std::cout << "Successfully loaded " << vertexList.size() << " vertices and " 
+              << edgeList.size() << " edges" << std::endl;
     
-    // Map::DynamicGrid tempGrid(2.315, 2);
-    // tempGrid.buildAuxLinesFromGraph(graph);
-    // tempGrid.printAuxLineInfo();
+    std::cout << "\n=== Starting Edge Orientation Optimization ===" << std::endl;
+    int result_2 = Map::optimizeEdgeOrientation(vertexList, edgeList, graph);
+    
+    if (result_2 == 0) {
+        std::cout << "\n=== Edge Orientation Test completed successfully! ===" << std::endl;
+    } else {
+        std::cout << "\n=== Edge Orientation Test failed with error code: " << result_2 << " ===" << std::endl;
+        return result_2;
+    }
 
-    return 0; 
+    std::cout << "\n=== Starting Vertex Alignment Optimization ===" << std::endl;
+    int result_3 = Map::optimizeVertexAlignment(vertexList, edgeList, graph);
+
+    if (result_3 == 0) {
+        std::cout << "\n=== Vertex Alignment Test completed successfully! ===" << std::endl;
+    } else {
+        std::cout << "\n=== Vertex Alignment Test failed with error code: " << result_3 << " ===" << std::endl;
+        return result_3;
+    }
+    
+    std::cout << "\n=== Building Dynamic Grid ===" << std::endl;
+    Map::DynamicGrid grid(2.315, 2);
+    grid.buildAuxLines(graph);
+    grid.printAuxLineInfo();
+
+    std::cout << "\n=== Starting Dangling Vertex Positioning ===" << std::endl;
+    // Test dangling vertex positioning with consistent parameter list
+    int result_4 = Map::positionDanglingVertices(vertexList, edgeList, graph, grid);
+    
+    if (result_4 >= 0) {
+        std::cout << "\n=== Dangling Vertex Positioning Test completed successfully! ===" << std::endl;
+        std::cout << "Modified " << result_4 << " vertices." << std::endl;
+    } else {
+        std::cout << "\n=== Dangling Vertex Positioning Test failed with error code: " << result_4 << " ===" << std::endl;
+        return result_4;
+    }
+
+    grid.printAuxLineInfo();
+
+    std::cout << "\n=== All Tests Completed Successfully! ===" << std::endl;
+    return 0;
 }
