@@ -22,7 +22,7 @@ namespace Map {
         double              position;       // x-coordinate for vertical line, y-coordinate for horizontal line
         bool                isHorizontal;   // true for horizontal line, false for vertical line        
         int                 voteCount;      // number of vertices that "vote" for this line
-        std::vector<int>    vertexIDs;      // IDs of vertices close to this line
+        std::vector<int>    vertexIDs;      // IDs of vertices on this line
 
     public:
         AuxiliaryLine() {}
@@ -89,6 +89,13 @@ namespace Map {
         // Dynamic line addition
         void addHorizontalAuxLine(double position);
         void addVerticalAuxLine(double position);
+        
+        // Update auxiliary line positions (for spacing optimization)
+        void updateHorizontalLinePositions(const std::vector<double>& newPositions);
+        void updateVerticalLinePositions(const std::vector<double>& newPositions);
+        
+        // Rebuild vertex-line mappings (updates vertexIDs for all auxiliary lines)
+        void rebuildVertexLineMappings(const BaseUGraphProperty& graph);
 
         // Debug and visualization
         void printAuxLineInfo() const;

@@ -7,6 +7,7 @@
 #include "VertexAlignment.h"
 #include "DynamicGrid.h"
 #include "DVPositioning.h"
+#include "AuxLineSpacing.h"
 
 int main() {
     std::cout << "=== Metro Map Optimization Test ===" << std::endl;
@@ -16,7 +17,8 @@ int main() {
     Map::BaseUGraphProperty graph;
     
     std::cout << "\n=== Reading map file ===" << std::endl;
-    if (!Map::readMapFileToGraph("local_map.txt", vertexList, edgeList, graph)) {
+    // if (!Map::readMapFileToGraph("local_map.txt", vertexList, edgeList, graph)) {
+    if (!Map::readMapFileToGraph("input/test_0.txt", vertexList, edgeList, graph)) {
         std::cerr << "Failed to read map file!" << std::endl;
         return -1;
     }
@@ -61,7 +63,20 @@ int main() {
         return result_4;
     }
 
+    // Rebuild vertex-line mappings after DVPositioning to ensure consistency
+    std::cout << "\n=== Rebuilding vertex-line mappings ===" << std::endl;
+    grid.rebuildVertexLineMappings(graph);
     grid.printAuxLineInfo();
+
+    std::cout << "\n=== Starting Auxiliary Line Spacing Optimization ===" << std::endl;
+    int result_5 = Map::uniformAuxLineSpacing(vertexList, edgeList, graph, grid, 10.0);
+    
+    if (result_5 == 0) {
+        std::cout << "\n=== Auxiliary Line Spacing Test completed successfully! ===" << std::endl;
+    } else {
+        std::cout << "\n=== Auxiliary Line Spacing Test failed with error code: " << result_5 << " ===" << std::endl;
+        return result_5;
+    }
 
     std::cout << "\n=== All Tests Completed Successfully! ===" << std::endl;
     return 0;

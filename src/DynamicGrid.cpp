@@ -185,4 +185,86 @@ namespace Map {
         // Future: Add logic to filter/select key auxiliary lines based on importance
     }
 
+    void DynamicGrid::updateHorizontalLinePositions(const std::vector<double>& newPositions) {
+        if (newPositions.size() != horizontalAuxLines.size()) {
+            std::cerr << "Error: Size mismatch in updateHorizontalLinePositions. Expected " 
+                     << horizontalAuxLines.size() << ", got " << newPositions.size() << std::endl;
+            return;
+        }
+        
+        for (size_t i = 0; i < horizontalAuxLines.size(); ++i) {
+            horizontalAuxLines[i].setPosition(newPositions[i]);
+        }
+        
+        // Re-sort lines by position to maintain order
+        std::sort(horizontalAuxLines.begin(), horizontalAuxLines.end(),
+                  [](const AuxiliaryLine& a, const AuxiliaryLine& b) {
+                      return a.getPosition() < b.getPosition();
+                  });
+    }
+
+    void DynamicGrid::updateVerticalLinePositions(const std::vector<double>& newPositions) {
+        if (newPositions.size() != verticalAuxLines.size()) {
+            std::cerr << "Error: Size mismatch in updateVerticalLinePositions. Expected " 
+                     << verticalAuxLines.size() << ", got " << newPositions.size() << std::endl;
+            return;
+        }
+        
+        for (size_t i = 0; i < verticalAuxLines.size(); ++i) {
+            verticalAuxLines[i].setPosition(newPositions[i]);
+        }
+        
+        // Re-sort lines by position to maintain order
+        std::sort(verticalAuxLines.begin(), verticalAuxLines.end(),
+                  [](const AuxiliaryLine& a, const AuxiliaryLine& b) {
+                      return a.getPosition() < b.getPosition();
+                  });
+    }
+
+    void DynamicGrid::rebuildVertexLineMappings(const BaseUGraphProperty& graph) {
+        std::cout << "=== Rebuilding Vertex-Line Mappings ===" << std::endl;
+        
+        const double EPSILON = 1e-2;
+        
+        // Clear existing vertexIDs for all lines
+        for (auto& hLine : horizontalAuxLines) {
+            hLine.setVertexIDs(std::vector<int>());
+        }
+        for (auto& vLine : verticalAuxLines) {
+            vLine.setVertexIDs(std::vector<int>());
+        }
+        
+        // Scan all vertices and assign them to appropriate auxiliary lines
+        auto vp = boost::vertices(graph);
+        for (auto vit = vp.first; vit != vp.second; ++vit) {
+            const BaseVertexProperty& vertex = graph[*vit];
+            int vertexID = vertex.getID();
+            Coord2 pos = vertex.getCoord();
+            
+            // Check horizontal auxiliary lines
+            for (auto& hLine : horizontalAuxLines) {
+                if (std::abs(pos.y() - hLine.getPosition()) < EPSILON) {
+                    std::vector<int> currentIDs = hLine.getVertexIDs();
+                    currentIDs.push_back(vertexID);
+                    hLine.setVertexIDs(currentIDs);
+                    break;
+                }
+            }
+            
+            // Check vertical auxiliary lines
+            for (auto& vLine : verticalAuxLines) {
+                if (std::abs(pos.x() - vLine.getPosition()) < EPSILON) {
+                    std::vector<int> currentIDs = vLine.getVertexIDs();
+                    currentIDs.push_back(vertexID);
+                    vLine.setVertexIDs(currentIDs);
+                    break;
+                }
+            }
+        }
+        
+        std::cout << "Rebuilt vertex-line mappings for " 
+                  << horizontalAuxLines.size() << " horizontal and " 
+                  << verticalAuxLines.size() << " vertical lines" << std::endl;
+    }
+
 } // namespace Map

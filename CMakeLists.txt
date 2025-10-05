@@ -59,6 +59,7 @@ set(SOURCES
     src/DVPositioning.cpp
     src/CheckOverlap.cpp
     src/Commons.cpp
+    src/AuxLineSpacing.cpp
 )
 
 # Create executable file for edge orientation test
