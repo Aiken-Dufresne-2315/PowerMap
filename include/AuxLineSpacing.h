@@ -18,7 +18,8 @@ namespace Map {
         std::vector<BaseEdgeProperty>& edgeList,
         BaseUGraphProperty& graph,
         DynamicGrid& grid,
-        double minSpacing = 10.0);      // Minimum spacing constraint between adjacent lines
+        double minSpacing = 10.0,
+        const std::string& testCaseName = "");
 
 } // namespace Map
 

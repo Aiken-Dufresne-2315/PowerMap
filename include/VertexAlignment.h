@@ -19,7 +19,8 @@ namespace Map {
     int optimizeVertexAlignment(
         std::vector<BaseVertexProperty>& vertexList, 
         std::vector<BaseEdgeProperty>& edgeList, 
-        BaseUGraphProperty& graph);
+        BaseUGraphProperty& graph,
+        const std::string& testCaseName = "");
 
 } // namespace Map
 

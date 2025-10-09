@@ -487,7 +487,8 @@ namespace Map {
         std::vector<BaseVertexProperty>& vertexList, 
         std::vector<BaseEdgeProperty>& edgeList, 
         BaseUGraphProperty& graph,
-        DynamicGrid& grid) {
+        DynamicGrid& grid,
+        const std::string& testCaseName) {
         
         try {
             std::cout << "=== Starting Dangling Vertex Positioning ===" << std::endl;
@@ -585,8 +586,9 @@ namespace Map {
             }
             
             // Create visualization after positioning
-            createVisualization(vertexList, edgeList, "after_dv.svg");
-            std::cout << "\nCreated visualization: after_dv.svg" << std::endl;
+            std::string outputFile = "output/" + testCaseName + "_4.svg";
+            createVisualization(vertexList, edgeList, outputFile);
+            std::cout << "\nCreated visualization: " << outputFile << std::endl;
             
             std::cout << "\n=== Dangling Vertex Positioning Completed Successfully ===" << std::endl;
             

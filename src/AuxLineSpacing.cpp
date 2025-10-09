@@ -151,13 +151,12 @@ namespace Map {
         std::vector<BaseEdgeProperty>& edgeList,
         BaseUGraphProperty& graph,
         DynamicGrid& grid,
-        double minSpacing) {
+        double minSpacing,
+        const std::string& testCaseName) {
         
         std::cout << "\n========================================" << std::endl;
         std::cout << "=== Auxiliary Line Spacing Optimization ===" << std::endl;
         std::cout << "========================================" << std::endl;
-        
-        createVisualization(vertexList, edgeList, "before_spacing.svg");
         
         // IMPORTANT: Rebuild vertex-line mappings before optimization
         // This ensures vertexIDs are up-to-date after DVPositioning
@@ -323,7 +322,8 @@ namespace Map {
         grid.printAuxLineInfo();
         
         // ==================== Step 5: Generate Visualization ====================
-        createVisualization(vertexList, edgeList, "after_spacing.svg");
+        std::string outputFile = "output/" + testCaseName + "_5.svg";
+        createVisualization(vertexList, edgeList, outputFile);
         
         std::cout << "\n=== Auxiliary Line Spacing Optimization Completed Successfully! ===" << std::endl;
         return 0;

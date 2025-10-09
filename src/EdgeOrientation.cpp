@@ -22,18 +22,19 @@
 namespace Map {
 
     // Parameter settings for edge orientation optimization
-    const double TOLERANCE_EPSILON = 0;                                                         // Tolerance parameter ε
-    const double ANGLE_THRESHOLD_DEG = 30;                                                      // Angle threshold δ = 22.5°
+    const double TOLERANCE_EPSILON = 0;                                             // Tolerance parameter ε
+    const double ANGLE_THRESHOLD_DEG = 30;                                          // Angle threshold δ = 22.5°
     const double TAN_THRESHOLD = std::tan(ANGLE_THRESHOLD_DEG * M_PI / 180.0);                
-    const double LAMBDA_H = 1.0;                                                                // Weight for horizontal edges
-    const double LAMBDA_V = 1.0;                                                                // Weight for vertical edges
-    const double BIG_M = 1000.0;                                                                // Big M parameter
-    const double EDGE_LENGTH_THRESHOLD = 23.15;                                                 // Edge length threshold
+    const double LAMBDA_H = 1.0;                                                    // Weight for horizontal edges
+    const double LAMBDA_V = 1.0;                                                    // Weight for vertical edges
+    const double BIG_M = 1000.0;                                                    // Big M parameter
+    const double EDGE_LENGTH_THRESHOLD = 23.15;                                     // Edge length threshold
 
     int optimizeEdgeOrientation(
         std::vector<BaseVertexProperty>& vertexList, 
         std::vector<BaseEdgeProperty>& edgeList, 
-        BaseUGraphProperty& graph) {
+        BaseUGraphProperty& graph,
+        const std::string& testCaseName) {
         try {
             std::cout << "=== Starting Edge Orientation Optimization ===" << std::endl;
         
@@ -85,122 +86,206 @@ namespace Map {
             
             std::cout << "=== Anti-overlap Processing ===" << std::endl;
 
-            std::vector<std::pair<int, size_t>> degree_vertex_pairs;
+            std::vector<std::pair<int, size_t>> degVertIdxPairs;
             // !!! vertex iterator
             std::pair<BaseUGraphProperty::vertex_iterator, BaseUGraphProperty::vertex_iterator> vp = vertices(graph);
 
             int vertexIndex = 0;
             for (BaseUGraphProperty::vertex_iterator vi = vp.first; vi != vp.second; ++vi, ++vertexIndex) {
                 size_t out_degree = boost::out_degree(*vi, graph);
-                degree_vertex_pairs.push_back({out_degree, vertexIndex});
+                degVertIdxPairs.push_back({out_degree, vertexIndex});
             }
 
             std::sort(
-                degree_vertex_pairs.begin(),
-                degree_vertex_pairs.end(),
+                degVertIdxPairs.begin(),
+                degVertIdxPairs.end(),
                 [](const auto& a, const auto& b) { return a.first > b.first; } );
 
             std::cout << "Vertex processing order (by out-degree):" << std::endl;
-            for (const auto& pair : degree_vertex_pairs) {
+            for (const auto& pair : degVertIdxPairs) {
                 std::cout << "Vertex " << vertexList[pair.second].getID() << " (degree: " << pair.first << ")" << std::endl;
             }
 
-            // edge processed flag
-            std::vector<bool> edgeProcessed(edgeNum, false);
+            // Initialize edge orientation states to -1 (unprocessed)
+            // -1: unprocessed, 0: explicitly not aligned, 1: aligned
+            std::vector<int> edgeOriented2V(edgeNum, -1);
+            std::vector<int> edgeOriented2H(edgeNum, -1);
 
-            const double ANGLE_CENTERS[4] = {0.0, M_PI / 2, M_PI, 3 * M_PI / 2};
-            const std::string DIRECTION_NAMES[4] = {"RIGHT", "UP", "LEFT", "DOWN"};
+            const double ANGLE_CENTERS[2] = {M_PI / 2, 0.0};  // Vertical (UP/DOWN), Horizontal (LEFT/RIGHT)
+            const std::string AXIS_NAMES[2] = {"VERTICAL", "HORIZONTAL"};
 
             // angle normalization function -> [0, 2*PI)
             auto normalizeAngle = [](double angle) -> double {
-                if(angle < 0) {
+                while(angle < 0) {
                     angle += 2 * M_PI;
+                }
+                while(angle >= 2 * M_PI) {
+                    angle -= 2 * M_PI;
                 }
                 return angle;
             };
 
-            // calculate angle offset
-            auto calculateOffset = [&](double edge_angle, int direction) -> double {
+            // Calculate minimum offset to an axis (vertical or horizontal)
+            auto calculateAxisOffset = [&](double edge_angle, int axis) -> double {
                 double norm_angle = normalizeAngle(edge_angle);
-                double center = ANGLE_CENTERS[direction];
-                double offset = std::min(std::abs(norm_angle - center), 2 * M_PI - std::abs(norm_angle - center));
-                return offset;
+                if (axis == 0) {  // Vertical: UP (90°) or DOWN (270°)
+                    double offsetUp = std::abs(norm_angle - M_PI / 2);
+                    double offsetDown = std::abs(norm_angle - 3 * M_PI / 2);
+                    return std::min(offsetUp, offsetDown);
+                } else {  // Horizontal: RIGHT (0°) or LEFT (180°)
+                    double offsetRight = std::min(std::abs(norm_angle), std::abs(norm_angle - 2 * M_PI));
+                    double offsetLeft = std::abs(norm_angle - M_PI);
+                    return std::min(offsetRight, offsetLeft);
+                }
+            };
+            
+            // Check if edge is within axis neighborhood
+            auto inAxisNeighborhood = [&](double edge_angle, int axis) -> bool {
+                double offset = calculateAxisOffset(edge_angle, axis);
+                double threshold_rad = ANGLE_THRESHOLD_DEG * M_PI / 180.0;
+                return offset <= threshold_rad;
+            };
+            
+            // Get the other vertex of an edge given current vertex
+            auto theOtherVertexDesc = [&](BaseUGraphProperty::edge_descriptor edge_desc, BaseUGraphProperty::vertex_descriptor current) -> BaseUGraphProperty::vertex_descriptor {
+                BaseUGraphProperty::vertex_descriptor source = boost::source(edge_desc, graph);
+                BaseUGraphProperty::vertex_descriptor target = boost::target(edge_desc, graph);
+                return (source == current) ? target : source;
             };
 
-            // !!! for each vertex
-            for (const auto& pair : degree_vertex_pairs) {
+            // !!! Main loop: for each vertex (sorted by out-degree)
+            for (const auto& pair : degVertIdxPairs) {
                 size_t currentVertexIndex = pair.second;
                 
-                // get corresponding vertex descriptor
-                // !!! same function as vertexID2Index
+                // Get corresponding vertex descriptor
                 BaseUGraphProperty::vertex_iterator vi = vp.first;
                 std::advance(vi, currentVertexIndex);
                 BaseUGraphProperty::vertex_descriptor current_vertex = *vi;
+                unsigned int currentVertexID = graph[current_vertex].getID();
                 
-                // temporary variables for four directions: store the best edge information
-                struct BestEdgeInfo {
-                    int edgeID = -1;
-                    double minOffset = std::numeric_limits<double>::max();
-                    bool candidateExists = false;
-                };
-                std::array<BestEdgeInfo, 4> best4Edges;
+                std::cout << "\n=== Processing vertex " << currentVertexIndex << " (ID: " << currentVertexID << ") ===" << std::endl;
                 
-                std::cout << "\nProcessing vertex " << currentVertexIndex << " (ID: " << graph[current_vertex].getID() << ")" << std::endl;
-                
-                std::pair<BaseUGraphProperty::out_edge_iterator, BaseUGraphProperty::out_edge_iterator> out_range = boost::out_edges(current_vertex, graph);
-                
-                // !!! for each out-edge of the current vertex
-                for (BaseUGraphProperty::out_edge_iterator ei = out_range.first; ei != out_range.second; ++ei) {
-                    const BaseEdgeProperty& tempEdge = graph[*ei];
-                    // !!! tempEdge.ID() is consistent with its index in edgeList
-                    // !!! In contrast, vertex.ID() is not.
-                    int edgeIndex = tempEdge.ID();
-                    if (edgeProcessed[edgeIndex]) {
-                        continue;
-                    }
+                // Process both axes: 0=Vertical, 1=Horizontal
+                for (int axis = 0; axis < 2; ++axis) {
+                    std::vector<int>& edgeOrientedMarks = (axis == 0) ? edgeOriented2V : edgeOriented2H;
+                    bool flag = false;  // Flag to track if other vertex already has aligned edge
                     
-                    // immediately mark the edge as visited (regardless of whether it satisfies the condition)
-                    edgeProcessed[edgeIndex] = true;
-                    const BaseEdgeProperty& edge = edgeList[edgeIndex];
+                    std::cout << "\n  Processing " << AXIS_NAMES[axis] << " axis:" << std::endl;
                     
-                    if (edge.Close2H() || edge.Close2V()) {
+                    // First pass: mark edges based on conflict detection
+                    std::pair<BaseUGraphProperty::out_edge_iterator, BaseUGraphProperty::out_edge_iterator> oep = boost::out_edges(current_vertex, graph);
+                    
+                    // !!! Traverse out-edges of the current vertex
+                    for (BaseUGraphProperty::out_edge_iterator eit = oep.first; eit != oep.second; ++eit) {
+                        int edgeIndex = graph[*eit].ID();
+                        
+                        // Skip if already processed
+                        if (edgeOrientedMarks[edgeIndex] != -1) {
+                            std::cout << "    Edge " << edgeIndex << " already processed (state=" << edgeOrientedMarks[edgeIndex] << "), skip" << std::endl;
+                            continue;
+                        }
+                        
+                        // edgeID is equivalent to edgeIndex
+                        const BaseEdgeProperty& edge = edgeList[edgeIndex];
                         double edge_angle = edge.Angle();
-
-                        for (int dir = 0; dir < 4; ++dir) {
-                            double angle_threshold_rad = ANGLE_THRESHOLD_DEG * M_PI / 180.0;
-                            double offset = calculateOffset(edge_angle, dir);
+                        
+                        // Check if edge is within axis neighborhood
+                        if (inAxisNeighborhood(edge_angle, axis)) {
+                            std::cout << "    Edge " << edgeIndex << " is in " << AXIS_NAMES[axis] << " neighborhood (angle=" << edge_angle * 180.0 / M_PI << "°)" << std::endl;
                             
-                            if (offset <= angle_threshold_rad) {
-                                if (!best4Edges[dir].candidateExists || offset < best4Edges[dir].minOffset) {
-                                    best4Edges[dir].edgeID = edgeIndex;
-                                    best4Edges[dir].minOffset = offset;
-                                    best4Edges[dir].candidateExists = true;
-                                    
-                                    std::cout << "  Direction " << DIRECTION_NAMES[dir]
-                                            << ": Edge " << edgeIndex
-                                            << " (offset: " << offset * 180.0 / M_PI << " degree)" << std::endl;
+                            // Get the other vertex of this edge
+                            BaseUGraphProperty::vertex_descriptor oVertex = theOtherVertexDesc(*eit, current_vertex);
+                            
+                            // Check if other vertex already has an aligned edge in this axis
+                            flag = false;
+                            std::pair<BaseUGraphProperty::out_edge_iterator, BaseUGraphProperty::out_edge_iterator> ooep = boost::out_edges(oVertex, graph);
+                            
+                            for (BaseUGraphProperty::out_edge_iterator oeit = ooep.first; oeit != ooep.second; ++oeit) {
+                                int otherEdgeIndex = graph[*oeit].ID();
+                                if (edgeOrientedMarks[otherEdgeIndex] == 1) {
+                                    flag = true;
+                                    std::cout << "      Conflict detected! Other vertex has aligned edge " << otherEdgeIndex << std::endl;
+                                    break;
                                 }
                             }
+                            
+                            // Mark the edge based on conflict status
+                            if (!flag) {
+                                edgeOrientedMarks[edgeIndex] = 1;
+                                std::cout << "      Set edge " << edgeIndex << " " << AXIS_NAMES[axis] << " = 1 (aligned)" << std::endl;
+                                flag = false;  // Reset for next edge
+                            } 
+                            else {
+                                edgeOrientedMarks[edgeIndex] = 0;
+                                std::cout << "      Set edge " << edgeIndex << " " << AXIS_NAMES[axis] << " = 0 (conflict)" << std::endl;
+                            }
+                        } 
+                        else {
+                            // Not in neighborhood
+                            edgeOrientedMarks[edgeIndex] = 0;
+                            std::cout << "    Edge " << edgeIndex << " not in " << AXIS_NAMES[axis] << " neighborhood, set to 0" << std::endl;
                         }
                     }
-                }
-                
-                for (int dir = 0; dir < 4; ++dir) {
-                    if (best4Edges[dir].candidateExists) {
-                        int bestEdgeIndex = best4Edges[dir].edgeID;
-                        
-                        if (dir == 0 || dir == 2) {
-                            edgeList[bestEdgeIndex].setOriented2H(true);
-                            std::cout << "  Set Edge " << bestEdgeIndex << " oriented2H = true" << std::endl;
-                        } else {
-                            edgeList[bestEdgeIndex].setOriented2V(true);
-                            std::cout << "  Set Edge " << bestEdgeIndex << " oriented2V = true" << std::endl;
+                    
+                    // Second pass: keep only the closest edge among all aligned edges (oriented=1)
+                    std::vector<int> candEdges;
+                    oep = boost::out_edges(current_vertex, graph);
+                    
+                    for (BaseUGraphProperty::out_edge_iterator eit = oep.first; eit != oep.second; ++eit) {
+                        int edgeIndex = graph[*eit].ID();
+                        if (edgeOrientedMarks[edgeIndex] == 1) {
+                            candEdges.push_back(edgeIndex);
                         }
+                    }
+                    
+                    if (candEdges.size() > 1) {
+                        std::cout << "  Multiple aligned edges detected (" << candEdges.size() << "), selecting closest to " << AXIS_NAMES[axis] << " axis" << std::endl;
+                        
+                        // Find the edge closest to the axis
+                        int bestEdge = candEdges[0];
+                        double minOffset = calculateAxisOffset(edgeList[bestEdge].Angle(), axis);
+                        
+                        for (int edgeIndex : candEdges) {
+                            double offset = calculateAxisOffset(edgeList[edgeIndex].Angle(), axis);
+                            std::cout << "    Edge " << edgeIndex << " offset: " << offset * 180.0 / M_PI << "°" << std::endl;
+                            if (offset < minOffset) {
+                                minOffset = offset;
+                                bestEdge = edgeIndex;
+                            }
+                        }
+                        
+                        // Set all other edges back to 0
+                        for (int edgeIndex : candEdges) {
+                            if (edgeIndex != bestEdge) {
+                                edgeOrientedMarks[edgeIndex] = 0;
+                                std::cout << "    Unmark edge " << edgeIndex << " (not the closest)" << std::endl;
+                            }
+                        }
+                        
+                        std::cout << "  Final choice: Edge " << bestEdge << " (offset: " << minOffset * 180.0 / M_PI << "°)" << std::endl;
                     }
                 }
             }
 
-            std::cout << "=== Anti-overlap Processing Completed ===" << std::endl;            
+            std::cout << "\n=== Anti-overlap Processing Completed ===" << std::endl;
+            
+            // Apply final orientation states to edgeList
+            std::cout << "\n=== Final Edge Orientations ===" << std::endl;
+            for (int e = 0; e < edgeNum; ++e) {
+                if (edgeOriented2V[e] == 1) {
+                    edgeList[e].setOriented2V(true);
+                    std::cout << "Edge " << e << ": Oriented2V = true" << std::endl;
+                } else {
+                    edgeList[e].setOriented2V(false);
+                }
+                
+                if (edgeOriented2H[e] == 1) {
+                    edgeList[e].setOriented2H(true);
+                    std::cout << "Edge " << e << ": Oriented2H = true" << std::endl;
+                } else {
+                    edgeList[e].setOriented2H(false);
+                }
+            }
 
             // ---------------------------------------------------------------------------------------------------------
             // Add constraints
@@ -224,8 +309,6 @@ namespace Map {
 
                 bool v = edge.Oriented2V();
                 bool h = edge.Oriented2H();
-                // bool v = edge.Close2V();
-                // bool h = edge.Close2H();
 
                 model.addConstr(X[i] - X[j] <= TOLERANCE_EPSILON + BIG_M * (1 - v), "enforce_v_1_" + std::to_string(e));
                 model.addConstr(X[j] - X[i] <= TOLERANCE_EPSILON + BIG_M * (1 - v), "enforce_v_2_" + std::to_string(e));
@@ -233,8 +316,6 @@ namespace Map {
                 model.addConstr(Y[j] - Y[i] <= TOLERANCE_EPSILON + BIG_M * (1 - h), "enforce_h_2_" + std::to_string(e));
             }
             
-            createVisualization(vertexList, edgeList, "before_2.svg");
-
             GRBQuadExpr objective = 0;
             for (int i = 0; i < vertexNum; ++i) {
                 objective += (X[i] - vertexList[i].getCoord().x()) * (X[i] - vertexList[i].getCoord().x()) + 
@@ -306,7 +387,8 @@ namespace Map {
                     edgeList[edge.ID()].setAngle(newAngle);
                 }
 
-                createVisualization(vertexList, edgeList, "after_2.svg");
+                std::string outputFile = "output/" + testCaseName + "_2.svg";
+                createVisualization(vertexList, edgeList, outputFile);
                 // Update edges in edgeList with new vertex coordinates
 
                 // !!! not updated completely

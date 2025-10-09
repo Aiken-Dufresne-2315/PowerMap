@@ -1,0 +1,17 @@
+# This directory stores all SVG visualization outputs
+# Generated files format: {testCaseName}_{stageNumber}.svg
+# 
+# Example: For input file "input/test0.txt", generates:
+#   - test0_0.svg (Initial State)
+#   - test0_2.svg (Edge Orientation)
+#   - test0_3.svg (Vertex Alignment)
+#   - test0_4.svg (Dangling Vertex Positioning)
+#   - test0_5.svg (Auxiliary Line Spacing)
+# 
+# Stage numbers:
+# 0 - Initial State (before any optimization)
+# 2 - Edge Orientation
+# 3 - Vertex Alignment
+# 4 - Dangling Vertex Positioning
+# 5 - Auxiliary Line Spacing
+

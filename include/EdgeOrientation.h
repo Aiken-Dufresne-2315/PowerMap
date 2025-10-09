@@ -11,7 +11,11 @@ namespace Map {
     
     // Main function for edge orientation optimization
     // Returns 0 on success, -1 on failure
-    int optimizeEdgeOrientation(std::vector<BaseVertexProperty>& vertexList, std::vector<BaseEdgeProperty>& edgeList, BaseUGraphProperty& graph);
+    int optimizeEdgeOrientation(
+        std::vector<BaseVertexProperty>& vertexList, 
+        std::vector<BaseEdgeProperty>& edgeList, 
+        BaseUGraphProperty& graph,
+        const std::string& testCaseName = "");
 
 } // namespace Map
 

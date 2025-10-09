@@ -199,7 +199,8 @@ namespace Map {
     int optimizeVertexAlignment(
         std::vector<BaseVertexProperty>& vertexList, 
         std::vector<BaseEdgeProperty>& edgeList, 
-        BaseUGraphProperty& graph) {
+        BaseUGraphProperty& graph,
+        const std::string& testCaseName) {
         try {
             std::cout << "=== Starting Vertex Alignment Optimization ===" << std::endl;
         
@@ -404,7 +405,8 @@ namespace Map {
                     edgeList[edge.ID()].setAngle(newAngle);
                 }
 
-                createVisualization(vertexList, edgeList, "method_2_after_3.svg");
+                std::string outputFile = "output/" + testCaseName + "_3.svg";
+                createVisualization(vertexList, edgeList, outputFile);
 
             } else if (status == GRB_INFEASIBLE) {
                 std::cerr << "Model is infeasible!" << std::endl;
