@@ -1,5 +1,6 @@
 #include "VertexAlignment.h"
 #include "VisualizeSVG.h"
+#include "CheckOverlap.h"
 #define _USE_MATH_DEFINES  // Enable M_PI and other math constants
 #include "BaseUGraphProperty.h"
 #include "gurobi_c++.h"
@@ -77,7 +78,8 @@ namespace Map {
                 int idx;
                 if (k == 1) {
                     idx = sortedCoords.size() / 2;
-                } else {
+                } 
+                else {
                     // !!! thinking !!!
                     idx = i * (sortedCoords.size() - 1) / (k - 1);
                 }
@@ -164,14 +166,14 @@ namespace Map {
         for (int i = 0; i < vertexList.size(); ++i) {
             double minHDist = std::numeric_limits<double>::max();
             double minVDist = std::numeric_limits<double>::max();
-            int bestHLine = -1, bestVLine = -1;
+            int bestHLIdx = -1, bestVLIdx = -1;
             
             // Find closest horizontal line within tolerance
             for (int h = 0; h < hLines.size(); ++h) {
                 double dist = std::abs(vertexList[i].getCoord().y() - hLines[h]);
                 if (dist < minHDist && dist <= ALIGNMENT_TOLERANCE) {
                     minHDist = dist;
-                    bestHLine = h;
+                    bestHLIdx = h;
                 }
             }
             
@@ -180,16 +182,16 @@ namespace Map {
                 double dist = std::abs(vertexList[i].getCoord().x() - vLines[v]);
                 if (dist < minVDist && dist <= ALIGNMENT_TOLERANCE) {
                     minVDist = dist;
-                    bestVLine = v;
+                    bestVLIdx = v;
                 }
             }
             
             // Allow both horizontal and vertical alignment if within tolerance
-            if (bestHLine != -1) {
-                candidates.push_back({i, bestHLine, true, minHDist, hLines[bestHLine]});
+            if (bestHLIdx != -1) {
+                candidates.push_back({i, bestHLIdx, true, minHDist, hLines[bestHLIdx]});
             }
-            if (bestVLine != -1) {
-                candidates.push_back({i, bestVLine, false, minVDist, vLines[bestVLine]});
+            if (bestVLIdx != -1) {
+                candidates.push_back({i, bestVLIdx, false, minVDist, vLines[bestVLIdx]});
             }
         }
         
@@ -233,8 +235,11 @@ namespace Map {
             }
         
             std::cout << "Coordinate range: X[" << x_min << ", " << x_max << "], Y[" << y_min << ", " << y_max << "]" << std::endl;
-
+            
+            // ----------------------------------------------------------------------------------------------------
             // Phase 1: Detect alignment lines using clustering
+            // ----------------------------------------------------------------------------------------------------
+            
             std::cout << "\n=== Phase 1: Line Detection ===" << std::endl;
             
             int optimalHorizontalK, optimalVerticalK;
@@ -257,7 +262,10 @@ namespace Map {
                 return 0;
             }
 
+            // ----------------------------------------------------------------------------------------------------
             // Phase 2: Pre-select vertices for alignment
+            // ----------------------------------------------------------------------------------------------------
+            
             std::cout << "\n=== Phase 2: Pre-selection ===" << std::endl;
             
             std::vector<VertexLineCandidate> alignmentCandidates = preSelect(vertexList, hLines, vLines);
@@ -265,29 +273,117 @@ namespace Map {
             std::cout << "Selected " << alignmentCandidates.size() << " alignment constraints:" << std::endl;
             
             // Group candidates by vertex for better display
-            std::map<int, std::vector<VertexLineCandidate>> vertexToCandidates;
+            std::map<int, std::vector<VertexLineCandidate>> vertIdx2Cand;
             for (const auto& candidate : alignmentCandidates) {
-                vertexToCandidates[candidate.vertexIdx].push_back(candidate);
+                vertIdx2Cand[candidate.vertexIdx].push_back(candidate);
             }
             
-            for (const auto& pair : vertexToCandidates) {
-                int vertexIdx = pair.first;
-                const auto& candidates = pair.second;
+            // for (const auto& pair : vertIdx2Cand) {
+            //     int vertexIdx = pair.first;
+            //     const auto& candidates = pair.second;
                 
-                std::cout << "  Vertex " << vertexList[vertexIdx].getID() << " -> ";
-                for (int i = 0; i < candidates.size(); ++i) {
-                    if (i > 0) std::cout << " and ";
-                    const auto& candidate = candidates[i];
-                    std::cout << (candidate.isHorizontal ? "H-Line" : "V-Line") 
-                             << " " << candidate.lineIdx 
-                             << " (pos=" << candidate.linePosition 
-                             << ", dist=" << candidate.distance << ")";
-                }
-                std::cout << std::endl;
-            }
+            //     std::cout << "  Vertex " << vertexList[vertexIdx].getID() << " -> ";
+            //     for (int i = 0; i < candidates.size(); ++i) {
+            //         if (i > 0) std::cout << " and ";
+            //         const auto& candidate = candidates[i];
+            //         std::cout << (candidate.isHorizontal ? "H-Line" : "V-Line") 
+            //                  << " " << candidate.lineIdx 
+            //                  << " (pos=" << candidate.linePosition 
+            //                  << ", dist=" << candidate.distance << ")";
+            //     }
+            //     std::cout << std::endl;
+            // }
 
             if (alignmentCandidates.empty()) {
                 std::cout << "No vertices selected for alignment. Skipping optimization." << std::endl;
+                return 0;
+            }
+
+            // ----------------------------------------------------------------------------------------------------
+            // Phase 2.5: Overlap-based filtering with pre-checking
+            // ----------------------------------------------------------------------------------------------------
+            
+            std::cout << "\n=== Phase 2.5: Overlap-based Filtering ===" << std::endl;
+            
+            // Group candidates by alignment line
+            std::map<std::pair<int, bool>, std::vector<VertexLineCandidate>> lineGroups;
+            for (const auto& cand : alignmentCandidates) {
+                lineGroups[{cand.lineIdx, cand.isHorizontal}].push_back(cand);
+            }
+            
+            std::vector<VertexLineCandidate> validCandidates;
+            
+            // Process each line group
+            // !!! lineKey: {lineIdx, isHorizontal}
+            // !!! group: vector<VertexLineCandidate>
+            for (auto& [lineKey, group]: lineGroups) {
+                int lineIdx = lineKey.first;
+                bool isHorizontal = lineKey.second;
+                
+                std::cout << "\nProcessing " << (isHorizontal ? "H-Line " : "V-Line ") << lineIdx << std::endl;
+                
+                // Sort by distance to line (closer vertices have priority)
+                std::sort(group.begin(), group.end(), 
+                    [](const auto& a, const auto& b) { return a.distance < b.distance; });
+                
+                // Try to align each vertex
+                for (const auto& cand : group) {
+                    int vertexIdx = cand.vertexIdx;
+                    int vertexID = vertexList[vertexIdx].getID();
+                    
+                    // Calculate new position
+                    Coord2 newPos = isHorizontal ?
+                        Coord2(vertexList[vertexIdx].getCoord().x(), cand.linePosition) :
+                        Coord2(cand.linePosition, vertexList[vertexIdx].getCoord().y());
+                    
+                    std::cout << "  Trying vertex " << vertexID
+                             << " at (" << newPos.x() << ", " << newPos.y() << ")..." << std::endl;
+                    
+                    // Check overlap
+                    if (!overlapHappens(vertexID, newPos, graph)) {
+                        // No overlap - accept this alignment
+                        validCandidates.push_back(cand);
+                        
+                        // Immediately update graph
+                        std::pair<BaseUGraphProperty::vertex_iterator, BaseUGraphProperty::vertex_iterator> tvp = vertices(graph);
+                        for (BaseUGraphProperty::vertex_iterator vit = tvp.first; vit != tvp.second; ++vit) {
+                            if (graph[*vit].getID() == vertexID) {
+                                graph[*vit].setCoord(newPos.x(), newPos.y());
+                                break;
+                            }
+                        }
+                        
+                        // Update vertexList
+                        vertexList[vertexIdx].setCoord(newPos.x(), newPos.y());
+                        
+                        // Update related edges in graph and edgeList
+                        std::pair<BaseUGraphProperty::edge_iterator, BaseUGraphProperty::edge_iterator> ep_temp = edges(graph);
+                        for (BaseUGraphProperty::edge_iterator ei = ep_temp.first; ei != ep_temp.second; ++ei) {
+                            if (graph[*ei].Source().getID() == vertexID || graph[*ei].Target().getID() == vertexID) {
+                                BaseUGraphProperty::vertex_descriptor source_desc = boost::source(*ei, graph);
+                                BaseUGraphProperty::vertex_descriptor target_desc = boost::target(*ei, graph);
+                                double newAngle = calculateAngle(graph[source_desc], graph[target_desc]);
+                                graph[*ei].setAngle(newAngle);
+                                edgeList[graph[*ei].ID()].setAngle(newAngle);
+                            }
+                        }
+                        
+                        std::cout << "    Aligned successfully" << std::endl;
+                    } 
+                    else {
+                        std::cout << "    Overlap detected, skip" << std::endl;
+                    }
+                }
+            }
+            
+            std::cout << "\nFiltering result: " << validCandidates.size() << "/" << alignmentCandidates.size() 
+                     << " candidates passed overlap check" << std::endl;
+            
+            // Replace alignmentCandidates with validCandidates
+            alignmentCandidates = validCandidates;
+            
+            if (alignmentCandidates.empty()) {
+                std::cout << "No valid candidates after overlap filtering. Skipping optimization." << std::endl;
                 return 0;
             }
 
@@ -316,7 +412,8 @@ namespace Map {
                 if (candidate.isHorizontal) {
                     model.addConstr(Y[candidate.vertexIdx] == candidate.linePosition, 
                                    "force_h_align_" + std::to_string(candidate.vertexIdx));
-                } else {
+                } 
+                else {
                     model.addConstr(X[candidate.vertexIdx] == candidate.linePosition, 
                                    "force_v_align_" + std::to_string(candidate.vertexIdx));
                 }
@@ -408,13 +505,16 @@ namespace Map {
                 std::string outputFile = "output/" + testCaseName + "_3.svg";
                 createVisualization(vertexList, edgeList, outputFile);
 
-            } else if (status == GRB_INFEASIBLE) {
+            } 
+            else if (status == GRB_INFEASIBLE) {
                 std::cerr << "Model is infeasible!" << std::endl;
                 return -1;
-            } else if (status == GRB_UNBOUNDED) {
+            } 
+            else if (status == GRB_UNBOUNDED) {
                 std::cerr << "Model is unbounded!" << std::endl;
                 return -1;
-            } else {
+            } 
+            else {
                 std::cerr << "Optimization ended with status " << status << std::endl;
                 return -1;
             }

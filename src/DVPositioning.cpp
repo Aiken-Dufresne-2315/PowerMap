@@ -93,7 +93,7 @@ namespace Map {
         BaseUGraphProperty::vertex_descriptor vertexDesc = getVertexDescriptor(vertexID);
         double currentX = graph[vertexDesc].getCoord().x();
         double currentY = graph[vertexDesc].getCoord().y();
-        std::cout << "CurrentX: " << currentX << " Current Y: " << currentY << std::endl;
+        std::cout << "Initial X: " << currentX << " Initial Y: " << currentY << std::endl;
 
         for (const AuxiliaryLine& hline: grid.getHorizontalAuxLines()) {
             if (currentY < hline.getPosition()) {
@@ -364,8 +364,8 @@ namespace Map {
             //     std::cout << std::endl;
             // }
 
-            std::cout << "Maybe Here?" << std::endl;
-            std::cout << std::endl;
+            // std::cout << "Maybe Here?" << std::endl;
+            // std::cout << std::endl;
 
             double currentY = pos.y();
             std::vector<AuxiliaryLine> adjHALs = getAdjHALs(vertexID, grid, graph);
@@ -412,6 +412,8 @@ namespace Map {
         BaseUGraphProperty::vertex_descriptor vertexDesc = getVertexDescriptor(vertexID);
         Coord2 pos = graph[vertexDesc].getCoord();
 
+        std::cout << "Initial coordinates: X: " << pos.x() << " Y: " << pos.y() << std::endl;
+
         double currentX = pos.x();
         std::vector<AuxiliaryLine> adjVALs = getAdjVALs(vertexID, grid, graph);
         double minDistance = std::numeric_limits<double>::max();
@@ -422,6 +424,8 @@ namespace Map {
             const AuxiliaryLine& adjVAL = adjVALs[i];
             Coord2 newPos = Coord2(adjVAL.getPosition(), pos.y());
 
+            std::cout << "Now we have a try from West to East. New X: " << adjVAL.getPosition() << " Y: " << pos.y() << std::endl;
+
             if (!overlapHappens(vertexID, newPos, graph)) { // there is no overlap!
                 flag = true;
                 double dist = std::abs(currentX - adjVAL.getPosition());
@@ -431,6 +435,7 @@ namespace Map {
                 }
             }
             else {
+                std::cout << "Holy Shit! We have an overlap!" << std::endl;
                 continue;
             }
         }
@@ -453,6 +458,7 @@ namespace Map {
         for (int i = 0; i < adjHALs.size(); ++i) {
             const AuxiliaryLine& adjHAL = adjHALs[i];
             Coord2 newPos = Coord2(pos.x(), adjHAL.getPosition());
+            std::cout << "Now we have a try from North to South. New X: " << pos.x() << " New Y: " << adjHAL.getPosition() << std::endl;
 
             if (!overlapHappens(vertexID, newPos, graph)) { // there is no overlap!
                 flag = true;
@@ -463,6 +469,7 @@ namespace Map {
                 }
             }
             else {
+                std::cout << "Holy Shit! We have an overlap!" << std::endl;
                 continue;
             }
         }
@@ -592,6 +599,16 @@ namespace Map {
             
             std::cout << "\n=== Dangling Vertex Positioning Completed Successfully ===" << std::endl;
             
+            std::cout << std::endl;
+            std::cout << "Current Graph:" << std::endl;
+            std::cout << "Current Graph:" << std::endl;
+            std::cout << "Current Graph:" << std::endl;
+            std::cout << std::endl;
+            for (BaseUGraphProperty::vertex_iterator vi = vp.first; vi != vp.second; ++vi) {
+                std::cout << graph[*vi].getID() << ": (" << graph[*vi].getCoord().x() << ", " << graph[*vi].getCoord().y() << ")" << std::endl;
+            }
+            std::cout << std::endl;
+
             return modifiedCount;
             
         } catch (std::exception& e) {

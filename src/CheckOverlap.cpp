@@ -87,7 +87,7 @@ namespace Map {
         auto vp = boost::vertices(graph);
         auto ep = boost::edges(graph);
 
-        auto out_ep = boost::out_edges(VD, graph);
+        auto oep = boost::out_edges(VD, graph);
 
         // !!! Remember: check overlap with the new vertex position and the corresponding edges!
 
@@ -96,11 +96,17 @@ namespace Map {
 
         // std::cout << tempNewV.getID() << ": (" << tempNewV.getCoord().x() << ", " << tempNewV.getCoord().y() << ")" << std::endl;
 
+        std::set<int> outVertexIDs;
         std::set<int> outEdgeIDs;
 
-        // OK here
-        for (BaseUGraphProperty::out_edge_iterator oeit = out_ep.first; oeit != out_ep.second; ++oeit) {
+        for (BaseUGraphProperty::out_edge_iterator oeit = oep.first; oeit != oep.second; ++oeit) {
             outEdgeIDs.insert(graph[*oeit].ID());
+            if (graph[*oeit].Source().getID() == vertexID) {
+                outVertexIDs.insert(graph[*oeit].Target().getID());
+            }
+            else {
+                outVertexIDs.insert(graph[*oeit].Source().getID());
+            }
         }
 
         // Store vertices persistently so references remain valid
@@ -108,7 +114,7 @@ namespace Map {
         std::deque<BaseVertexProperty> vertexStorage;
         std::vector<BaseEdgeProperty> newOutEdges;  
         
-        for(BaseUGraphProperty::out_edge_iterator oeit = out_ep.first; oeit != out_ep.second; ++oeit) {
+        for(BaseUGraphProperty::out_edge_iterator oeit = oep.first; oeit != oep.second; ++oeit) {
             // Create deep copies of vertices and store them persistently
             BaseVertexProperty tempSource = graph[*oeit].Source();
             BaseVertexProperty tempTarget = graph[*oeit].Target();
@@ -133,46 +139,64 @@ namespace Map {
         } 
 
         // // !!! output something confusing here !!!
-        std::cout << "Glory is mine!" << std::endl;
-        for (auto newOutEdge: newOutEdges) {
-            std::cout << newOutEdge.Source().getID() << ": (" << newOutEdge.Source().getCoord().x() << ", " << newOutEdge.Source().getCoord().y() << ")" << std::endl;
-            std::cout << newOutEdge.Target().getID() << ": (" << newOutEdge.Target().getCoord().x() << ", " << newOutEdge.Target().getCoord().y() << ")" << std::endl;
-            std::cout << std::endl;
-        }
+        // std::cout << "Glory is mine!" << std::endl;
+        // for (auto newOutEdge: newOutEdges) {
+        //     std::cout << newOutEdge.Source().getID() << ": (" << newOutEdge.Source().getCoord().x() << ", " << newOutEdge.Source().getCoord().y() << ")" << std::endl;
+        //     std::cout << newOutEdge.Target().getID() << ": (" << newOutEdge.Target().getCoord().x() << ", " << newOutEdge.Target().getCoord().y() << ")" << std::endl;
+        //     std::cout << std::endl;
+        // }
 
         // 1. V-V checking
-
+        std::cout << "Checking overlap 1..." << std::endl;
         for (BaseUGraphProperty::vertex_iterator vit = vp.first; vit != vp.second; ++vit) {
             BaseVertexProperty tempV = graph[*vit];
             if (vertexID != tempV.getID() && VVOverlap(tempNewV, tempV)) {
-                std::cout << tempV.getID() << ": (" << tempV.getCoord().x() << ", " << tempV.getCoord().y() << ")" << std::endl;
-                std::cout << tempNewV.getID() << ": (" << tempNewV.getCoord().x() << ", " << tempNewV.getCoord().y() << ")" << std::endl;
+                std::cout << std::endl;
+                std::cout << "Checked vertex " << tempV.getID() << ": (" << tempV.getCoord().x() << ", " << tempV.getCoord().y() << ")" << std::endl;
+                std::cout << "Current vertex " << tempNewV.getID() << ": (" << tempNewV.getCoord().x() << ", " << tempNewV.getCoord().y() << ")" << std::endl;
                 std::cout << "VVOverlap(1) happens" << std::endl;
                 return true;
             }
         }
 
         // 2. V-E checking
-        // std::cout << "ATTENTION" << std::endl;
-        // BaseUGraphProperty::vertex_descriptor testVD = getVertexDescriptor(58);
-        // std::cout << graph[testVD].getID() << ": (" << graph[testVD].getCoord().x() << ", " << graph[testVD].getCoord().y() << ")" << std::endl;
 
+        std::cout << "Checking overlap 2.1..." << std::endl;
         for (BaseUGraphProperty::edge_iterator eit = ep.first; eit != ep.second; ++eit) {
             int tempID = graph[*eit].ID();
             if (outEdgeIDs.find(tempID) == outEdgeIDs.end()) { 
                 // graph[*eit] is not an out-edge of v
 
                 if (VEOverlap(tempNewV, graph[*eit])) {
-                    // std::cout << tempNewV.getCoord().x() << " " << tempNewV.getCoord().y() << std::endl;
-                    // std::cout << graph[*eit].Source().getID() << ": (" << graph[*eit].Source().getCoord().x() << ", " << graph[*eit].Source().getCoord().y() << ")" << std::endl;
-                    // std::cout << graph[*eit].Target().getID() << ": (" << graph[*eit].Target().getCoord().x() << ", " << graph[*eit].Target().getCoord().y() << ")" << std::endl;
-                    std::cout << "VEOverlap(2) happens" << std::endl;
+                    std::cout << std::endl;
+                    std::cout << "Current vertex: " << tempNewV.getCoord().x() << " " << tempNewV.getCoord().y() << std::endl;
+                    std::cout << "Checked edge source " << graph[*eit].Source().getID() << ": (" << graph[*eit].Source().getCoord().x() << ", " << graph[*eit].Source().getCoord().y() << ")" << std::endl;
+                    std::cout << "Checked edge target " << graph[*eit].Target().getID() << ": (" << graph[*eit].Target().getCoord().x() << ", " << graph[*eit].Target().getCoord().y() << ")" << std::endl;
+                    std::cout << "VEOverlap(2.1) happens" << std::endl;
+                    return true;
+                }
+            }
+        }
+
+        std::cout << "Checking overlap 2.2..." << std::endl;
+        for (auto newOutEdge: newOutEdges) {
+            for (BaseUGraphProperty::vertex_iterator vit = vp.first; vit != vp.second; ++vit) {
+                if (graph[*vit].getID() != vertexID && 
+                    outVertexIDs.find(graph[*vit].getID()) == outVertexIDs.end() && 
+                    VEOverlap(graph[*vit], newOutEdge)) {
+                    // an out-edge of v overlaps with an irrelevant vertex
+                    std::cout << std::endl;
+                    std::cout << "Checked vertex " << graph[*vit].getID() << ": (" << graph[*vit].getCoord().x() << ", " << graph[*vit].getCoord().y() << ")" << std::endl;
+                    std::cout << "Current edge source " << newOutEdge.Source().getID() << ": (" << newOutEdge.Source().getCoord().x() << ", " << newOutEdge.Source().getCoord().y() << ")" << std::endl;
+                    std::cout << "Current edge target " << newOutEdge.Target().getID() << ": (" << newOutEdge.Target().getCoord().x() << ", " << newOutEdge.Target().getCoord().y() << ")" << std::endl;
+                    std::cout << "VEOverlap(2.2) happens" << std::endl;
                     return true;
                 }
             }
         }
 
         // 3.1. check: OUT(v) and E-OUT(v)
+        std::cout << "Checking overlap 3.1..." << std::endl;
         for (BaseUGraphProperty::edge_iterator eit = ep.first; eit != ep.second; ++eit) {
             if(outEdgeIDs.find(graph[*eit].ID()) != outEdgeIDs.end()) {
                 // graph[*eit] is an out-edge of v
@@ -182,10 +206,11 @@ namespace Map {
             // graph[*eit] is not an out-edge of v
             for (BaseEdgeProperty newOutEdge: newOutEdges) {
                 if (EEOverlap(graph[*eit], newOutEdge)) {
-                    std::cout << graph[*eit].Source().getID() << ": (" << graph[*eit].Source().getCoord().x() << ", " << graph[*eit].Source().getCoord().y() << ")" << std::endl;
-                    std::cout << graph[*eit].Target().getID() << ": (" << graph[*eit].Target().getCoord().x() << ", " << graph[*eit].Target().getCoord().y() << ")" << std::endl;
-                    std::cout << newOutEdge.Source().getID() << ": (" << newOutEdge.Source().getCoord().x() << ", " << newOutEdge.Source().getCoord().y() << ")" << std::endl;
-                    std::cout << newOutEdge.Target().getID() << ": (" << newOutEdge.Target().getCoord().x() << ", " << newOutEdge.Target().getCoord().y() << ")" << std::endl;
+                    std::cout << std::endl;
+                    std::cout << "Checked edge source " << graph[*eit].Source().getID() << ": (" << graph[*eit].Source().getCoord().x() << ", " << graph[*eit].Source().getCoord().y() << ")" << std::endl;
+                    std::cout << "Checked edge target " << graph[*eit].Target().getID() << ": (" << graph[*eit].Target().getCoord().x() << ", " << graph[*eit].Target().getCoord().y() << ")" << std::endl;
+                    std::cout << "Current edge source " << newOutEdge.Source().getID() << ": (" << newOutEdge.Source().getCoord().x() << ", " << newOutEdge.Source().getCoord().y() << ")" << std::endl;
+                    std::cout << "Current edge target " << newOutEdge.Target().getID() << ": (" << newOutEdge.Target().getCoord().x() << ", " << newOutEdge.Target().getCoord().y() << ")" << std::endl;
                     std::cout << "EEOverlap(3.1) happens" << std::endl;
                     return true;
                 }
@@ -193,10 +218,12 @@ namespace Map {
         }
 
         // 3.2. check: OUT(v) and OUT(v)
+        std::cout << "Checking overlap 3.2..." << std::endl;
         for (BaseEdgeProperty newOutEdge1: newOutEdges) {
             for (BaseEdgeProperty newOutEdge2: newOutEdges) {
                 if (newOutEdge1.ID() != newOutEdge2.ID() && 
                     EEOverlap(newOutEdge1, newOutEdge2)) {
+                    std::cout << std::endl;
                     std::cout << newOutEdge1.Source().getID() << ": (" << newOutEdge1.Source().getCoord().x() << ", " << newOutEdge1.Source().getCoord().y() << ")" << std::endl;
                     std::cout << newOutEdge1.Target().getID() << ": (" << newOutEdge1.Target().getCoord().x() << ", " << newOutEdge1.Target().getCoord().y() << ")" << std::endl;
                     std::cout << newOutEdge2.Source().getID() << ": (" << newOutEdge2.Source().getCoord().x() << ", " << newOutEdge2.Source().getCoord().y() << ")" << std::endl;

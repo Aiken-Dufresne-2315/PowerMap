@@ -87,7 +87,7 @@ namespace Map {
             double y = vertex.getCoord().y() - minY + padding;
             
             // draw station circle
-            svgFile << "<circle class=\"station\" cx=\"" << x << "\" cy=\"" << y << "\" r=\"15\"/>\n";
+            svgFile << "<circle class=\"station\" cx=\"" << x << "\" cy=\"" << y << "\" r=\"5\"/>\n";
             
             // draw station ID number
             svgFile << "<text class=\"station-id\" x=\"" << x << "\" y=\"" << y << "\">" << vertex.getID() << "</text>\n";
