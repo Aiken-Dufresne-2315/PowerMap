@@ -24,7 +24,7 @@
 namespace Map {
     
     // Global vertex ID to descriptor mapping
-    std::map<int, boost::graph_traits<BaseUGraphProperty>::vertex_descriptor> vertexID2Descriptor;
+    std::map<int, boost::graph_traits<BaseUGraphProperty>::vertex_descriptor> vertexID2Desc;
     //------------------------------------------------------------------------------
     // calculate the angle between two vertices (in radians)
     //------------------------------------------------------------------------------
@@ -83,21 +83,21 @@ namespace Map {
     //------------------------------------------------------------------------------
     bool parseEdge(const std::string& line, 
                 std::vector<BaseVertexProperty>& vertices,
-                const std::map<unsigned int, int>& vertexIndexMap,
+                const std::map<unsigned int, int>& vertexID2Index,
                 BaseEdgeProperty& edge) {
         std::regex edgeRegex(R"((\d+)\s*-\s*(\d+))");
         std::smatch matches;
         
         if (std::regex_search(line, matches, edgeRegex) && matches.size() == 3) {
-            unsigned int sourceId = std::stoul(matches[1].str());
-            unsigned int targetId = std::stoul(matches[2].str());
+            unsigned int sourceID = std::stoul(matches[1].str());
+            unsigned int targetID = std::stoul(matches[2].str());
             
             // Find vertex indices
-            auto sourceIt = vertexIndexMap.find(sourceId);
-            auto targetIt = vertexIndexMap.find(targetId);
+            auto sourceIt = vertexID2Index.find(sourceID);
+            auto targetIt = vertexID2Index.find(targetID);
             
-            if (sourceIt == vertexIndexMap.end() || targetIt == vertexIndexMap.end()) {
-                std::cerr << "error: vertex not found for edge " << sourceId << " - " << targetId << std::endl;
+            if (sourceIt == vertexID2Index.end() || targetIt == vertexID2Index.end()) {
+                std::cerr << "error: vertex not found for edge " << sourceID << " - " << targetID << std::endl;
                 return false;
             }
             
@@ -148,7 +148,7 @@ namespace Map {
         bool readingEdges = false;
         
         // used to quickly find the vertex mapping
-        std::map<unsigned int, int> vertexIndexMap;
+        std::map<unsigned int, int> vertexID2Index;
         
         while (std::getline(file, line)) {
             // remove the whitespace characters at the beginning and end of the line
@@ -186,7 +186,7 @@ namespace Map {
                 BaseVertexProperty vertex;
                 if (parseVertex(line, vertex)) {
                     // !!! ID mapping
-                    vertexIndexMap[vertex.getID()] = vertices.size();
+                    vertexID2Index[vertex.getID()] = vertices.size();
                     // !!! add the vertex to the vertices vector
                     vertices.push_back(vertex);
                     std::cout << "read the vertex: " << vertex.getID() << ". " 
@@ -201,7 +201,7 @@ namespace Map {
             // parse the edge data
             else if (readingEdges) {
                 BaseEdgeProperty edge;
-                if (parseEdge(line, vertices, vertexIndexMap, edge)) {
+                if (parseEdge(line, vertices, vertexID2Index, edge)) {
                     edges.push_back(edge);
                     std::cout << "read the edge: " << edge.Source().getID() << " - " << edge.Target().getID()
                             << " (ID: " << edge.ID() << ", angle: " << edge.Angle() << ")" << std::endl;
@@ -227,24 +227,24 @@ namespace Map {
     bool validateEdges(const std::vector<BaseVertexProperty>& vertices, 
                     const std::vector<BaseEdgeProperty>& edges) {
         // create the vertex ID set
-        std::set<unsigned int> vertexIds;
+        std::set<unsigned int> vertexIDs;
         for (const auto& vertex : vertices) {
-            vertexIds.insert(vertex.getID());
+            vertexIDs.insert(vertex.getID());
         }
         
         bool allValid = true;
         for (const auto& edge : edges) {
-            unsigned int sourceId = edge.Source().getID();
-            unsigned int targetId = edge.Target().getID();
+            unsigned int sourceID = edge.Source().getID();
+            unsigned int targetID = edge.Target().getID();
             
-            if (vertexIds.find(sourceId) == vertexIds.end()) {
-                std::cerr << "error: the source vertex " << sourceId << " of edge " << edge.ID() 
-                        << " (" << sourceId << " - " << targetId << ") does not exist" << std::endl;
+            if (vertexIDs.find(sourceID) == vertexIDs.end()) {
+                std::cerr << "error: the source vertex " << sourceID << " of edge " << edge.ID() 
+                        << " (" << sourceID << " - " << targetID << ") does not exist" << std::endl;
                 allValid = false;
             }
-            if (vertexIds.find(targetId) == vertexIds.end()) {
-                std::cerr << "error: the target vertex " << targetId << " of edge " << edge.ID() 
-                        << " (" << sourceId << " - " << targetId << ") does not exist" << std::endl;
+            if (vertexIDs.find(targetID) == vertexIDs.end()) {
+                std::cerr << "error: the target vertex " << targetID << " of edge " << edge.ID() 
+                        << " (" << sourceID << " - " << targetID << ") does not exist" << std::endl;
                 allValid = false;
             }
         }
@@ -281,7 +281,7 @@ namespace Map {
     }
 
     //------------------------------------------------------------------------------
-    // build BaseUGraphProperty from vertices and edges vectors
+    // !!! build BaseUGraphProperty from vertices and edges vectors
     //------------------------------------------------------------------------------
     bool buildGraph(const std::vector<BaseVertexProperty>& vertices, 
                 const std::vector<BaseEdgeProperty>& edges,
@@ -303,32 +303,47 @@ namespace Map {
         // Add all edges to the graph
         std::cout << "\nbuilding graph: adding edges..." << std::endl;
         for (const auto& edgeProp : edges) {
-            unsigned int sourceId = edgeProp.Source().getID();
-            unsigned int targetId = edgeProp.Target().getID();
+            unsigned int sourceID = edgeProp.Source().getID();
+            unsigned int targetID = edgeProp.Target().getID();
             
             // Find vertex descriptors
-            auto sourceIt = vertexMap.find(sourceId);
-            auto targetIt = vertexMap.find(targetId);
+            auto sourceIt = vertexMap.find(sourceID);
+            auto targetIt = vertexMap.find(targetID);
             
             // checking
             if (sourceIt == vertexMap.end() || targetIt == vertexMap.end()) {
-                std::cerr << "error: vertex not found for edge " << sourceId 
-                        << " - " << targetId << std::endl;
+                std::cerr << "error: vertex not found for edge " << sourceID 
+                        << " - " << targetID << std::endl;
                 continue;
             }
             
             BaseUGraphProperty::vertex_descriptor sourceDec = sourceIt->second;
             BaseUGraphProperty::vertex_descriptor targetDec = targetIt->second;
             
-            // Add edge to graph directly using the parsed edge property
+            // Create a new edge property that references vertices in the graph
+            BaseEdgeProperty graphEdgeProp(
+                graph[sourceDec],
+                graph[targetDec], 
+                edgeProp.ID(), 
+                edgeProp.Angle(),
+                edgeProp.Weight(),
+                edgeProp.Visited(),
+                edgeProp.VisitNum(),
+                edgeProp.Close2H(),
+                edgeProp.Close2V(),
+                edgeProp.Oriented2H(),
+                edgeProp.Oriented2V()
+            );
+            
+            // Add edge to graph using the new edge property
             std::pair<BaseUGraphProperty::edge_descriptor, bool> result = 
-                add_edge(sourceDec, targetDec, edgeProp, graph);
+                add_edge(sourceDec, targetDec, graphEdgeProp, graph);
             
             if (result.second) {
-                std::cout << "added edge " << sourceId << " - " << targetId 
+                std::cout << "added edge " << sourceID << " - " << targetID 
                         << " (ID: " << edgeProp.ID() << ", angle: " << edgeProp.Angle() << ")" << std::endl;
             } else {
-                std::cerr << "failed to add edge " << sourceId << " - " << targetId << std::endl;
+                std::cerr << "failed to add edge " << sourceID << " - " << targetID << std::endl;
             }
         }
         
@@ -340,14 +355,14 @@ namespace Map {
     // Build global vertex ID to descriptor mapping
     //------------------------------------------------------------------------------
     void buildVertexMapping(const BaseUGraphProperty& graph) { 
-        vertexID2Descriptor.clear();
+        vertexID2Desc.clear();
         std::pair<BaseUGraphProperty::vertex_iterator, BaseUGraphProperty::vertex_iterator> vertices = boost::vertices(graph);
         for (auto vit = vertices.first; vit != vertices.second; ++vit) {
             int id = graph[*vit].getID();
-            vertexID2Descriptor[id] = *vit;
+            vertexID2Desc[id] = *vit;
             // std::cout << "\n" << id << " " << graph[*vit].getID() << std::endl;
         }
-        std::cout << "built vertex mapping with " << vertexID2Descriptor.size() << " vertices" << std::endl;
+        std::cout << "built vertex mapping with " << vertexID2Desc.size() << " vertices" << std::endl;
     }
 
     //------------------------------------------------------------------------------

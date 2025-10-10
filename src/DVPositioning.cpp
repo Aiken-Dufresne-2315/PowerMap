@@ -319,6 +319,8 @@ namespace Map {
 
         BaseUGraphProperty::vertex_descriptor vertexDesc = getVertexDescriptor(vertexID);
         Coord2 pos = graph[vertexDesc].getCoord();
+        double X_result;
+        double Y_result;
 
         if (isOnHAL(vertexID, grid, graph)) {
             double currentX = pos.x();
@@ -346,26 +348,17 @@ namespace Map {
 
             // update the vertex position
             if (flag) {
+                X_result = bestX;
+                Y_result = pos.y();
                 graph[vertexDesc].setCoord(bestX, pos.y());
             }
             else {
+                X_result = currentX;
+                Y_result = pos.y();
                 addVAL(currentX, grid, graph);
             }
-            
-            return;
         }
         else if (isOnVAL(vertexID, grid, graph)) {
-
-            // BaseUGraphProperty::vertex_descriptor vertexDesc = getVertexDescriptor(vertexID);
-            // auto out_ep = boost::out_edges(vertexDesc, graph);
-            // for (BaseUGraphProperty::out_edge_iterator oeit = out_ep.first; oeit != out_ep.second; ++oeit) {
-            //     std::cout << graph[*oeit].Source().getID() << ": (" << graph[*oeit].Source().getCoord().x() << ", " << graph[*oeit].Source().getCoord().y() << ")" << std::endl;
-            //     std::cout << graph[*oeit].Target().getID() << ": (" << graph[*oeit].Target().getCoord().x() << ", " << graph[*oeit].Target().getCoord().y() << ")" << std::endl;
-            //     std::cout << std::endl;
-            // }
-
-            // std::cout << "Maybe Here?" << std::endl;
-            // std::cout << std::endl;
 
             double currentY = pos.y();
             std::vector<AuxiliaryLine> adjHALs = getAdjHALs(vertexID, grid, graph);
@@ -395,22 +388,31 @@ namespace Map {
             
             // update the vertex position
             if (flag) {
+                X_result = pos.x();
+                Y_result = bestY;
                 graph[vertexDesc].setCoord(pos.x(), bestY);
             }
             else {
+                X_result = pos.x();
+                Y_result = currentY;
                 addHAL(currentY, grid, graph);
             }
             // !!! update the adjacent edges?
-            
-            return;
         }
-        
+        else {
+            throw std::runtime_error("Foul and smelly!");
+        }
+
+        std::cout << "Final coordinates: X: " << X_result << " Y: " << Y_result << std::endl;
+        return;
     }
 
     void processFDV(int vertexID, DynamicGrid& grid, BaseUGraphProperty& graph) {
 
         BaseUGraphProperty::vertex_descriptor vertexDesc = getVertexDescriptor(vertexID);
         Coord2 pos = graph[vertexDesc].getCoord();
+        double X_result;
+        double Y_result;
 
         std::cout << "Initial coordinates: X: " << pos.x() << " Y: " << pos.y() << std::endl;
 
@@ -442,9 +444,13 @@ namespace Map {
 
         // update the vertex position
         if (flag) {
+            X_result = bestX;
+            Y_result = pos.y();
             graph[vertexDesc].setCoord(bestX, pos.y());
         }
         else {
+            X_result = currentX;
+            Y_result = pos.y();
             addVAL(currentX, grid, graph);
         }
 
@@ -476,13 +482,19 @@ namespace Map {
         
         // update the vertex position
         if (flag) {
+            X_result = pos.x();
+            Y_result = bestY;
             graph[vertexDesc].setCoord(pos.x(), bestY);
         }
         else {
+            X_result = pos.x();
+            Y_result = currentY;
             addHAL(currentY, grid, graph);
         }
         // !!! update the adjacent edges?
         
+        std::cout << "Final coordinates: X: " << X_result << " Y: " << Y_result << std::endl;
+        std::cout << "Final coordinates in graph: X: " << graph[vertexDesc].getCoord().x() << " Y: " << graph[vertexDesc].getCoord().y() << std::endl;
         return;
     }
     
@@ -517,7 +529,7 @@ namespace Map {
             
             std::cout << "Found " << danglingVertices.size() << " dangling vertices" << std::endl;
             
-            // First process vertices that are partially aligned
+            // !!! 1. First process vertices that are partially aligned
             for (int vertexID : danglingVertices) {
                 bool isOnHorizontal = isOnHAL(vertexID, grid, graph);
                 bool isOnVertical = isOnVAL(vertexID, grid, graph);
@@ -533,7 +545,7 @@ namespace Map {
                 }
             }
             
-            // Then process fully dangling vertices
+            // !!! 2. Then process fully dangling vertices
             for (int vertexID : danglingVertices) {
                 bool isOnHorizontal = isOnHAL(vertexID, grid, graph);
                 bool isOnVertical = isOnVAL(vertexID, grid, graph);

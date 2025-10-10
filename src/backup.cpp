@@ -182,7 +182,7 @@ namespace Map {
             }
             
             // Create vertex ID to index mapping
-            std::map<unsigned int, int> vertexId2Index = createVertexID2Index(vertexList);
+            std::map<unsigned int, int> vertexID2Index = createVertexID2Index(vertexList);
         
             // Calculate coordinate boundaries
             double x_min = vertexList[0].getCoord().x();
@@ -404,8 +404,8 @@ namespace Map {
                 std::pair<BaseUGraphProperty::vertex_iterator, BaseUGraphProperty::vertex_iterator> vp = vertices(graph);
                 for (BaseUGraphProperty::vertex_iterator vi = vp.first; vi != vp.second; ++vi) {
                     BaseVertexProperty& vertex = graph[*vi];
-                    auto it = vertexId2Index.find(vertex.getID());
-                    if (it != vertexId2Index.end()) {
+                    auto it = vertexID2Index.find(vertex.getID());
+                    if (it != vertexID2Index.end()) {
                         int idx = it->second;
                         double newX = X[idx].get(GRB_DoubleAttr_X);
                         double newY = Y[idx].get(GRB_DoubleAttr_X);

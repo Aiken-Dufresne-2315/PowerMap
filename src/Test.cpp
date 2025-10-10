@@ -18,7 +18,7 @@ int main() {
     Map::BaseUGraphProperty graph;
     
     // Define input file
-    std::string inputFile = "input/test2.txt";
+    std::string inputFile = "input/test46.txt";
     // std::string inputFile = "local_map.txt";
 
     // Extract test case name from input file (e.g., "input/test0.txt" -> "test0")

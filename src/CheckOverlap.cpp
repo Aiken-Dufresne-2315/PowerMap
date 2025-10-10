@@ -99,6 +99,19 @@ namespace Map {
         std::set<int> outVertexIDs;
         std::set<int> outEdgeIDs;
 
+        // !!! confusing checking result here !!!
+        if (vertexID == 17) {
+            std::cout << std::endl;
+            BaseUGraphProperty::vertex_descriptor tempVD = getVertexDescriptor(10);
+            std::cout << graph[tempVD].getID() << " " << graph[tempVD].getCoord().x() << " " << graph[tempVD].getCoord().y() << std::endl;
+            std::cout << "All hail Lelouch!" << std::endl;
+            for (BaseUGraphProperty::out_edge_iterator oeit = oep.first; oeit != oep.second; ++oeit) {
+                std::cout << graph[*oeit].Source().getID() << " " << graph[*oeit].Source().getCoord().x() << " " << graph[*oeit].Source().getCoord().y() << std::endl;
+                std::cout << graph[*oeit].Target().getID() << " " << graph[*oeit].Target().getCoord().x() << " " << graph[*oeit].Target().getCoord().y() << std::endl;
+                std::cout << std::endl;
+            }
+        }
+
         for (BaseUGraphProperty::out_edge_iterator oeit = oep.first; oeit != oep.second; ++oeit) {
             outEdgeIDs.insert(graph[*oeit].ID());
             if (graph[*oeit].Source().getID() == vertexID) {

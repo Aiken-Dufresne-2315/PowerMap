@@ -12,10 +12,10 @@ namespace Map {
     
     // Global mapping from vertex ID to vertex descriptor
     // This map is built once and used throughout the application
-    extern std::map<int, boost::graph_traits<BaseUGraphProperty>::vertex_descriptor> vertexID2Descriptor;
+    extern std::map<int, boost::graph_traits<BaseUGraphProperty>::vertex_descriptor> vertexID2Desc;
     
     // Helper function to get vertex descriptor by ID
-    boost::graph_traits<BaseUGraphProperty>::vertex_descriptor getVertexDescriptor(int vertexId);
+    boost::graph_traits<BaseUGraphProperty>::vertex_descriptor getVertexDescriptor(int vertexID);
     
 } // namespace Map
 

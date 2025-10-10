@@ -106,7 +106,7 @@ namespace Map {
         bool RightOccupied() const { return dirMask[3]; }
         
         // Setters
-        void setId(unsigned int _id)            { id = _id; }
+        void setID(unsigned int _id)            { id = _id; }
         void setCoord(const Coord2& _coord)     { coord = _coord; }
         void setCoord(double x, double y)       { coord.set(x, y); }
         void setValid(bool _valid)              { valid = _valid; }
