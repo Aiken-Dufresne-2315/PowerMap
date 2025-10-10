@@ -21,6 +21,7 @@
 namespace Map {
 
     // Find all dangling vertices in the graph (not on auxiliary line intersections)
+    // Returns vertices sorted by degree (descending order) so high-impact vertices are processed first
     std::vector<int> findDVs(const DynamicGrid& grid, const BaseUGraphProperty& graph) {
         std::vector<int> DVIDList;
         std::vector<double> hPositions = grid.getHALPositions();
@@ -50,6 +51,14 @@ namespace Map {
                 DVIDList.push_back(vertexID);
             }
         }
+        
+        // Sort by degree (descending order) to prioritize high-impact vertices
+        std::sort(DVIDList.begin(), DVIDList.end(), [&graph](int id1, int id2) {
+            auto v1 = getVertexDescriptor(id1);
+            auto v2 = getVertexDescriptor(id2);
+            return boost::degree(v1, graph) > boost::degree(v2, graph);
+        });
+        
         return DVIDList;
     }
     
