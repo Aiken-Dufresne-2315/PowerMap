@@ -15,4 +15,11 @@ namespace Map {
         throw std::runtime_error("Vertex ID not found in global mapping");
     }
     
+    boost::graph_traits<BaseUGraphProperty>::edge_descriptor getEdgeDescriptor(int edgeID) {
+        auto it = edgeID2Desc.find(edgeID);
+        if (it != edgeID2Desc.end()) {
+            return it->second;
+        }
+        throw std::runtime_error("Edge ID not found in global mapping");
+    }
 } // namespace Map

@@ -30,8 +30,6 @@ namespace Map {
         weight = 1.0;
         visited = false;
         visitedTimes = 0;
-        close2H = false;
-        close2V = false;
     }
 
     //------------------------------------------------------------------------------

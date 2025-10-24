@@ -25,6 +25,7 @@ namespace Map {
     
     // Global vertex ID to descriptor mapping
     std::map<int, boost::graph_traits<BaseUGraphProperty>::vertex_descriptor> vertexID2Desc;
+    std::map<int, boost::graph_traits<BaseUGraphProperty>::edge_descriptor> edgeID2Desc;
     //------------------------------------------------------------------------------
     // calculate the angle between two vertices (in radians)
     //------------------------------------------------------------------------------
@@ -108,22 +109,10 @@ namespace Map {
             // Calculate angle
             double angle = calculateAngle(sourceVertex, targetVertex);
             
-            // Calculate orientation feasibility for edge optimization
-            double dx = std::abs(targetVertex.getCoord().x() - sourceVertex.getCoord().x());
-            double dy = std::abs(targetVertex.getCoord().y() - sourceVertex.getCoord().y());
-            
-            // Constants for orientation determination (15 degrees threshold)
-            // !!! To be set as hyper-parameter !!!
-            const double ANGLE_THRESHOLD_DEG = 30;
-            const double TAN_THRESHOLD = std::tan(ANGLE_THRESHOLD_DEG * M_PI / 180.0);
-            
-            bool close2H = (dy <= TAN_THRESHOLD * dx);
-            bool close2V = (dx <= TAN_THRESHOLD * dy);
-            
             // Create edge with auto-generated ID
             static unsigned int edgeCounter = 0;
             
-            edge = BaseEdgeProperty(sourceVertex, targetVertex, edgeCounter++, angle, 1.0, false, 0, close2H, close2V);
+            edge = BaseEdgeProperty(sourceVertex, targetVertex, edgeCounter++, angle, 1.0, false, 0);
             
             return true;
         }
@@ -329,8 +318,6 @@ namespace Map {
                 edgeProp.Weight(),
                 edgeProp.Visited(),
                 edgeProp.VisitNum(),
-                edgeProp.Close2H(),
-                edgeProp.Close2V(),
                 edgeProp.Oriented2H(),
                 edgeProp.Oriented2V()
             );
@@ -366,6 +353,19 @@ namespace Map {
     }
 
     //------------------------------------------------------------------------------
+    // Build global edge ID to descriptor mapping
+    //------------------------------------------------------------------------------
+    void buildEdgeMapping(const BaseUGraphProperty& graph) { 
+        edgeID2Desc.clear();
+        std::pair<BaseUGraphProperty::edge_iterator, BaseUGraphProperty::edge_iterator> edges = boost::edges(graph);
+        for (auto eit = edges.first; eit != edges.second; ++eit) {
+            int id = graph[*eit].ID();
+            edgeID2Desc[id] = *eit;
+        }
+        std::cout << "built edge mapping with " << edgeID2Desc.size() << " edges" << std::endl;
+    }
+
+    //------------------------------------------------------------------------------
     // read map file and build BaseUGraphProperty directly
     // Hierarchical structure: readMapFile -> validateEdges -> buildGraph
     //------------------------------------------------------------------------------
@@ -383,8 +383,9 @@ namespace Map {
         
         // Build the graph
         if (buildGraph(vertices, edges, graph)) {
-            // Build the global vertex mapping after successful graph construction
+            // Build the global vertex and edge mappings after successful graph construction
             buildVertexMapping(graph);
+            buildEdgeMapping(graph);
             return true;
         }
         return false;

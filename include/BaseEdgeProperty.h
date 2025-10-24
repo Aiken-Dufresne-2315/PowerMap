@@ -34,8 +34,6 @@ namespace Map {
         double                                      weight;
         bool                                        visited;
         unsigned int                                visitedTimes;
-        bool                                        close2H;       
-        bool                                        close2V;
         bool                                        oriented2H;
         bool                                        oriented2V;
 
@@ -60,12 +58,10 @@ namespace Map {
             double w = 1,
             bool v = false,
             unsigned int vT = 0,
-            bool close2H = false,
-            bool close2V = false,
             bool oriented2H = false,
             bool oriented2V = false
         ): source(s), target(t), id(i), angle(a), weight(w), visited(v), visitedTimes(vT), 
-           close2H(close2H), close2V(close2V), oriented2H(oriented2H), oriented2V(oriented2V) {}
+           oriented2H(oriented2H), oriented2V(oriented2V) {}
 
         // copy constructor
         BaseEdgeProperty( 
@@ -73,7 +69,7 @@ namespace Map {
         ): source(e.source), target(e.target), 
         id(e.id), angle(e.angle), weight(e.weight), 
         visited(e.visited), visitedTimes(e.visitedTimes),
-        close2H(e.close2H), close2V(e.close2V), oriented2H(e.oriented2H), oriented2V(e.oriented2V) {}
+        oriented2H(e.oriented2H), oriented2V(e.oriented2V) {}
 
         // destructor
         virtual ~BaseEdgeProperty( void ) {}
@@ -88,8 +84,6 @@ namespace Map {
         double              Weight()            const { return this->weight; }
         bool                Visited()           const { return this->visited; }
         unsigned int        VisitNum()          const { return this->visitedTimes; }
-        bool                Close2H()           const { return this->close2H; }
-        bool                Close2V()           const { return this->close2V; }
         bool                Oriented2H()        const { return this->oriented2H; }
         bool                Oriented2V()        const { return this->oriented2V; }
 
@@ -106,8 +100,6 @@ namespace Map {
                 this->weight = other.weight;
                 this->visited = other.visited;
                 this->visitedTimes = other.visitedTimes;
-                this->close2H = other.close2H;
-                this->close2V = other.close2V;
                 this->oriented2H = other.oriented2H;
                 this->oriented2V = other.oriented2V;
             }
@@ -123,8 +115,6 @@ namespace Map {
         void setWeight(double _weight)                  { this->weight = _weight; }
         void setVisited(bool _visited)                  { this->visited = _visited; }
         void setVisitNum(unsigned int _visitedTimes)    { this->visitedTimes = _visitedTimes; }
-        void setClose2H(bool _close2H)                  { this->close2H = _close2H; }
-        void setClose2V(bool _close2V)                  { this->close2V = _close2V; }
         void setOriented2H(bool _oriented2H)            { this->oriented2H = _oriented2H; }
         void setOriented2V(bool _oriented2V)            { this->oriented2V = _oriented2V; }
         

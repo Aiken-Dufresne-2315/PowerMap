@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <set>
 #include "BaseVertexProperty.h"
 #include "BaseEdgeProperty.h"
 
@@ -16,7 +17,8 @@ namespace Map {
     void createVisualization(
         const std::vector<BaseVertexProperty>& vertices, 
         const std::vector<BaseEdgeProperty>& edges,
-        const std::string& filename) {
+        const std::string& filename,
+        const std::set<unsigned int>& highlightVertices) {
         
         if (vertices.empty()) {
             std::cerr << "no vertices to visualize!" << std::endl;
@@ -58,6 +60,7 @@ namespace Map {
         svgFile << "<defs>\n";
         svgFile << "  <style>\n";
         svgFile << "    .station { fill: #2563eb; stroke: #1e40af; stroke-width: 2; }\n";
+        svgFile << "    .station-overlap { fill: #ef4444; stroke: #dc2626; stroke-width: 2; }\n";
         svgFile << "    .station-id { font-family: Arial, sans-serif; font-size: 12px; ";
         svgFile << "fill: white; text-anchor: middle; dominant-baseline: central; }\n";
         svgFile << "    .edge { stroke: #6b7280; stroke-width: 2; }\n";
@@ -86,8 +89,10 @@ namespace Map {
             double x = vertex.getCoord().x() - minX + padding;
             double y = vertex.getCoord().y() - minY + padding;
             
-            // draw station circle
-            svgFile << "<circle class=\"station\" cx=\"" << x << "\" cy=\"" << y << "\" r=\"10\"/>\n";
+            // draw station circle - use red color if vertex is in highlight set
+            bool isHighlighted = highlightVertices.find(vertex.getID()) != highlightVertices.end();
+            std::string circleClass = isHighlighted ? "station-overlap" : "station";
+            svgFile << "<circle class=\"" << circleClass << "\" cx=\"" << x << "\" cy=\"" << y << "\" r=\"10\"/>\n";
             
             // draw station ID number
             svgFile << "<text class=\"station-id\" x=\"" << x << "\" y=\"" << y << "\">" << vertex.getID() << "</text>\n";

@@ -60,6 +60,7 @@ set(SOURCES
     src/CheckOverlap.cpp
     src/Commons.cpp
     src/AuxLineSpacing.cpp
+    src/SpatialGrid.cpp
 )
 
 # Create executable file for edge orientation test

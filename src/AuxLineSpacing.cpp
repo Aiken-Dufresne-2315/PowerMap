@@ -6,12 +6,14 @@
 #include "VisualizeSVG.h"
 #include "MapFileReader.h"
 #include "Commons.h"
+#include "CheckOverlap.h"
 #include "gurobi_c++.h"
 
 #include <iostream>
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <set>
 
 namespace Map {
 
@@ -321,9 +323,56 @@ namespace Map {
         grid.rebuildVertexLineMappings(graph);
         grid.printAuxLineInfo();
         
-        // ==================== Step 5: Generate Visualization ====================
+        // ==================== Step 5: Check for Overlaps ====================
+        std::cout << "\n=== Checking for vertex-edge overlaps ===" << std::endl;
+        std::set<unsigned int> overlappingVertices;
+        
+        // Iterate through all vertices
+        for (const auto& vertex : vertexList) {
+            unsigned int vertexID = vertex.getID();
+            
+            // Get all edges incident to this vertex
+            std::set<unsigned int> incidentEdgeIDs;
+            try {
+                BaseUGraphProperty::vertex_descriptor vd = getVertexDescriptor(vertexID);
+                auto oep = boost::out_edges(vd, graph);
+                for (auto oeit = oep.first; oeit != oep.second; ++oeit) {
+                    incidentEdgeIDs.insert(graph[*oeit].ID());
+                }
+            } catch (const std::exception& e) {
+                std::cerr << "Error getting edges for vertex " << vertexID << ": " << e.what() << std::endl;
+                continue;
+            }
+            
+            // Check if this vertex overlaps with any non-incident edge
+            for (const auto& edge : edgeList) {
+                // Skip edges that are incident to this vertex
+                if (incidentEdgeIDs.find(edge.ID()) != incidentEdgeIDs.end()) {
+                    continue;
+                }
+                
+                // Check for overlap
+                if (VEOverlap(vertex, edge)) {
+                    std::cout << "WARNING: Vertex " << vertexID 
+                             << " at (" << vertex.getCoord().x() << ", " << vertex.getCoord().y() << ")"
+                             << " overlaps with edge " << edge.ID()
+                             << " [" << edge.Source().getID() << " -> " << edge.Target().getID() << "]" << std::endl;
+                    overlappingVertices.insert(vertexID);
+                    break; // No need to check more edges for this vertex
+                }
+            }
+        }
+        
+        if (overlappingVertices.empty()) {
+            std::cout << "No vertex-edge overlaps detected!" << std::endl;
+        } else {
+            std::cout << "Total vertices with overlaps: " << overlappingVertices.size() << std::endl;
+            std::cout << "These vertices will be highlighted in red in the visualization." << std::endl;
+        }
+        
+        // ==================== Step 6: Generate Visualization ====================
         std::string outputFile = "output/" + testCaseName + "_5.svg";
-        createVisualization(vertexList, edgeList, outputFile);
+        createVisualization(vertexList, edgeList, outputFile, overlappingVertices);
         
         std::cout << "\n=== Auxiliary Line Spacing Optimization Completed Successfully! ===" << std::endl;
         return 0;

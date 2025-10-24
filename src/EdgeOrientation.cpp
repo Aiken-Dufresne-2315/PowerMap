@@ -81,7 +81,7 @@ namespace Map {
             }
             
             // ---------------------------------------------------------------------------------------------------------
-            // 2025.09.15 Handling Edge Overlapping.
+            // 2025.10.09 Handling Edge Overlapping.
             // ---------------------------------------------------------------------------------------------------------
             
             std::cout << "=== Anti-overlap Processing ===" << std::endl;
@@ -160,8 +160,8 @@ namespace Map {
                 // Get corresponding vertex descriptor
                 BaseUGraphProperty::vertex_iterator vi = vp.first;
                 std::advance(vi, currentVertexIndex);
-                BaseUGraphProperty::vertex_descriptor current_vertex = *vi;
-                unsigned int currentVertexID = graph[current_vertex].getID();
+                BaseUGraphProperty::vertex_descriptor currentVertex = *vi;
+                unsigned int currentVertexID = graph[currentVertex].getID();
                 
                 std::cout << "\n=== Processing vertex " << currentVertexIndex << " (ID: " << currentVertexID << ") ===" << std::endl;
                 
@@ -173,11 +173,11 @@ namespace Map {
                     std::cout << "\n  Processing " << AXIS_NAMES[axis] << " axis:" << std::endl;
                     
                     // First pass: mark edges based on conflict detection
-                    std::pair<BaseUGraphProperty::out_edge_iterator, BaseUGraphProperty::out_edge_iterator> oep = boost::out_edges(current_vertex, graph);
+                    std::pair<BaseUGraphProperty::out_edge_iterator, BaseUGraphProperty::out_edge_iterator> oep = boost::out_edges(currentVertex, graph);
                     
                     // !!! Traverse out-edges of the current vertex
-                    for (BaseUGraphProperty::out_edge_iterator eit = oep.first; eit != oep.second; ++eit) {
-                        int edgeIndex = graph[*eit].ID();
+                    for (BaseUGraphProperty::out_edge_iterator oeit = oep.first; oeit != oep.second; ++oeit) {
+                        int edgeIndex = graph[*oeit].ID();
                         
                         // Skip if already processed
                         if (edgeOrientedMarks[edgeIndex] != -1) {
@@ -194,17 +194,17 @@ namespace Map {
                             std::cout << "    Edge " << edgeIndex << " is in " << AXIS_NAMES[axis] << " neighborhood (angle=" << edge_angle * 180.0 / M_PI << "°)" << std::endl;
                             
                             // Get the other vertex of this edge
-                            BaseUGraphProperty::vertex_descriptor oVertex = theOtherVertexDesc(*eit, current_vertex);
+                            BaseUGraphProperty::vertex_descriptor oVertex = theOtherVertexDesc(*oeit, currentVertex);
                             
                             // Check if other vertex already has an aligned edge in this axis
                             flag = false;
                             std::pair<BaseUGraphProperty::out_edge_iterator, BaseUGraphProperty::out_edge_iterator> ooep = boost::out_edges(oVertex, graph);
                             
-                            for (BaseUGraphProperty::out_edge_iterator oeit = ooep.first; oeit != ooep.second; ++oeit) {
-                                int otherEdgeIndex = graph[*oeit].ID();
+                            for (BaseUGraphProperty::out_edge_iterator ooeit = ooep.first; ooeit != ooep.second; ++ooeit) {
+                                int otherEdgeIndex = graph[*ooeit].ID();
                                 if (edgeOrientedMarks[otherEdgeIndex] == 1) {
                                     flag = true;
-                                    std::cout << "      Conflict detected! Other vertex has aligned edge " << otherEdgeIndex << std::endl;
+                                    std::cout << "      Conflict detected! The other vertex has aligned edge " << otherEdgeIndex << std::endl;
                                     break;
                                 }
                             }
@@ -229,7 +229,7 @@ namespace Map {
                     
                     // Second pass: keep only the closest edge among all aligned edges (oriented=1)
                     std::vector<int> candEdges;
-                    oep = boost::out_edges(current_vertex, graph);
+                    oep = boost::out_edges(currentVertex, graph);
                     
                     for (BaseUGraphProperty::out_edge_iterator eit = oep.first; eit != oep.second; ++eit) {
                         int edgeIndex = graph[*eit].ID();

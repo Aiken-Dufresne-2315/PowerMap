@@ -277,22 +277,6 @@ namespace Map {
             for (const auto& candidate : alignmentCandidates) {
                 vertIdx2Cand[candidate.vertexIdx].push_back(candidate);
             }
-            
-            // for (const auto& pair : vertIdx2Cand) {
-            //     int vertexIdx = pair.first;
-            //     const auto& candidates = pair.second;
-                
-            //     std::cout << "  Vertex " << vertexList[vertexIdx].getID() << " -> ";
-            //     for (int i = 0; i < candidates.size(); ++i) {
-            //         if (i > 0) std::cout << " and ";
-            //         const auto& candidate = candidates[i];
-            //         std::cout << (candidate.isHorizontal ? "H-Line" : "V-Line") 
-            //                  << " " << candidate.lineIdx 
-            //                  << " (pos=" << candidate.linePosition 
-            //                  << ", dist=" << candidate.distance << ")";
-            //     }
-            //     std::cout << std::endl;
-            // }
 
             if (alignmentCandidates.empty()) {
                 std::cout << "No vertices selected for alignment. Skipping optimization." << std::endl;
@@ -301,6 +285,7 @@ namespace Map {
 
             // ----------------------------------------------------------------------------------------------------
             // Phase 2.5: Overlap-based filtering with pre-checking
+            // !!! what if sorting by out-degree of the vertex?
             // ----------------------------------------------------------------------------------------------------
             
             std::cout << "\n=== Phase 2.5: Overlap-based Filtering ===" << std::endl;
